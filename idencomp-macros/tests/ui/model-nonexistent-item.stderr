@@ -1,0 +1,5 @@
+error: expected `dummy`, `generic`, or `light`
+  --> tests/ui/model-nonexistent-item.rs:27:5
+   |
+27 |     nonexistent(4, 0, 0),
+   |     ^^^^^^^^^^^

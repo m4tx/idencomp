@@ -1,0 +1,28 @@
+[package]
+name = "idencomp-macros"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.62"
+description = "Idencomp genetic data compressor and decompressor library - internal procedural macros"
+categories = ["development-tools"]
+authors = ["Mateusz Maćkowski <mateusz@mackowski.org>"]
+readme = "../README.md"
+repository = "https://github.com/m4tx/idencomp.git"
+homepage = "https://github.com/m4tx/idencomp"
+license = "MIT"
+
+[lib]
+proc-macro = true
+
+[[test]]
+name = "tests"
+path = "tests/compile_tests.rs"
+
+[dependencies]
+syn = { version = "1.0.98", features = ["full"] }
+quote = "1.0.20"
+proc-macro2 = "1.0.40"
+
+[dev-dependencies]
+trybuild = { version = "1.0.63", features = ["diff"] }
+serde = { version = "1.0.137", features = ["derive"] }

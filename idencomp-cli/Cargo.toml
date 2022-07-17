@@ -1,0 +1,36 @@
+[package]
+name = "idencomp-cli"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.62"
+description = "Idencomp genetic data compressor and decompressor CLI interface"
+categories = ["encoding", "compression", "science", "command-line-utilities"]
+authors = ["Mateusz Maćkowski <mateusz@mackowski.org>"]
+keywords = ["compression", "genetics", "DNA", "nucleotides", "cram", "fasta", "fastq"]
+readme = "../README.md"
+repository = "https://github.com/m4tx/idencomp.git"
+homepage = "https://github.com/m4tx/idencomp"
+license = "MIT"
+
+[[bin]]
+name = "idencomp"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.58"
+atty = "0.2.14"
+chrono = "0.4.19"
+clap = { version = "3.2.5", features = ["derive"] }
+clap-verbosity-flag = "1.0.1"
+derive_more = "0.99.17"
+human-panic = "1.0.3"
+idencomp = { path = "../idencomp" }
+indicatif = "0.16.2"
+itertools = "0.10.3"
+log = { version = "0.4.17", features = ["max_level_trace", "release_max_level_info"] }
+lazy_static = "1.4.0"
+rayon = "1.5.3"
+csv = "1.1.6"
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = "0.5"
