@@ -37,6 +37,8 @@ pub(super) struct IdnBlockCompressor<W> {
     out_identifier_bytes: usize,
     out_acid_bytes: usize,
     out_q_score_bytes: usize,
+    acid_model_switches: usize,
+    q_score_model_switches: usize,
 }
 
 impl<W: Write> IdnBlockCompressor<W> {
@@ -66,6 +68,8 @@ impl<W: Write> IdnBlockCompressor<W> {
             out_identifier_bytes: 0,
             out_acid_bytes: 0,
             out_q_score_bytes: 0,
+            acid_model_switches: 0,
+            q_score_model_switches: 0,
         }
     }
 
@@ -118,6 +122,10 @@ impl<W: Write> IdnBlockCompressor<W> {
             .add_out_identifier_bytes(self.out_identifier_bytes);
         self.stats.add_out_acid_bytes(self.out_acid_bytes);
         self.stats.add_out_q_score_bytes(self.out_q_score_bytes);
+        self.stats.inc_blocks();
+        self.stats.add_acid_model_switches(self.acid_model_switches);
+        self.stats
+            .add_q_score_model_switches(self.q_score_model_switches);
 
         Ok(())
     }
@@ -219,6 +227,10 @@ impl<W: Write> IdnBlockCompressor<W> {
         let index = options.model_provider.index_of(model.identifier()) as u8;
         if self.current_acid_model != Some(index) {
             self.block_writer.write_switch_model(index)?;
+            self.current_acid_model = Some(index);
+
+            debug!("Switching to acid model: {}", model.identifier());
+            self.acid_model_switches += 1;
         }
         self.out_acid_bytes += bytes;
 
@@ -236,6 +248,10 @@ impl<W: Write> IdnBlockCompressor<W> {
         let index = options.model_provider.index_of(model.identifier()) as u8;
         if self.current_q_score_model != Some(index) {
             self.block_writer.write_switch_model(index)?;
+            self.current_q_score_model = Some(index);
+
+            debug!("Switching to quality score model: {}", model.identifier());
+            self.q_score_model_switches += 1;
         }
         self.out_q_score_bytes += bytes;
 

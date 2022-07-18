@@ -466,6 +466,10 @@ pub(super) struct CompressionStats {
     out_identifier_bytes: AtomicUsize,
     out_acid_bytes: AtomicUsize,
     out_q_score_bytes: AtomicUsize,
+
+    blocks: AtomicUsize,
+    acid_model_switches: AtomicUsize,
+    q_score_model_switches: AtomicUsize,
 }
 
 impl CompressionStats {
@@ -482,6 +486,10 @@ impl CompressionStats {
             out_identifier_bytes: AtomicUsize::new(0),
             out_acid_bytes: AtomicUsize::new(0),
             out_q_score_bytes: AtomicUsize::new(0),
+
+            blocks: AtomicUsize::new(0),
+            acid_model_switches: AtomicUsize::new(0),
+            q_score_model_switches: AtomicUsize::new(0),
         }
     }
 
@@ -513,6 +521,19 @@ impl CompressionStats {
         self.out_q_score_bytes.fetch_add(num, Ordering::Relaxed);
     }
 
+    pub fn inc_blocks(&self) {
+        self.blocks.fetch_add(1, Ordering::Relaxed);
+    }
+
+    pub fn add_acid_model_switches(&self, num: usize) {
+        self.acid_model_switches.fetch_add(num, Ordering::Relaxed);
+    }
+
+    pub fn add_q_score_model_switches(&self, num: usize) {
+        self.q_score_model_switches
+            .fetch_add(num, Ordering::Relaxed);
+    }
+
     fn print_stats(&self) {
         let in_bytes = self.in_bytes.load(Ordering::SeqCst);
         let in_identifier_bytes = self.in_identifier_bytes.load(Ordering::SeqCst);
@@ -522,6 +543,10 @@ impl CompressionStats {
         let out_identifier_bytes = self.out_identifier_bytes.load(Ordering::SeqCst);
         let out_acid_bytes = self.out_acid_bytes.load(Ordering::SeqCst);
         let out_q_score_bytes = self.out_q_score_bytes.load(Ordering::SeqCst);
+
+        let blocks = self.blocks.load(Ordering::SeqCst);
+        let acid_model_switches = self.acid_model_switches.load(Ordering::SeqCst);
+        let q_score_model_switches = self.q_score_model_switches.load(Ordering::SeqCst);
 
         info!(
             "Compressed {}",
@@ -559,6 +584,10 @@ impl CompressionStats {
             "QScr: {:>9} -> {:>9} ({:>7.3}%, {:.3} bpv)",
             in_symbols, out_q_score_bytes, q_score_rate, q_score_bpv
         );
+
+        info!("{} blocks", blocks);
+        info!("{} acid model switches", acid_model_switches);
+        info!("{} q score model switches", q_score_model_switches);
     }
 }
 

@@ -32,6 +32,33 @@ fn test_decompress_simple_1m() {
 }
 
 #[test_log::test]
+fn test_round_trip_many_sequences() {
+    let mut data = Vec::new();
+
+    // Compress
+    let params = IdnCompressorParams::builder()
+        .model_provider(SIMPLE_MODEL_PROVIDER.clone())
+        .build();
+
+    let mut idn_compressor = IdnCompressor::with_params(&mut data, params);
+    for sequence in SEQ_1K_READS.iter() {
+        idn_compressor.add_sequence(sequence.clone()).unwrap();
+    }
+    idn_compressor.finish().unwrap();
+
+    // Decompress
+    let params = IdnDecompressorParams::builder()
+        .model_provider(SIMPLE_MODEL_PROVIDER.clone())
+        .build();
+
+    let idn_decompressor = IdnDecompressor::with_params(data.as_slice(), params);
+    let result: Result<Vec<_>, _> = idn_decompressor.into_iter().collect();
+    let sequences = result.unwrap();
+
+    assert_eq!(sequences, *SEQ_1K_READS);
+}
+
+#[test_log::test]
 fn test_round_trip_small_blocks() {
     let mut data = Vec::new();
 
