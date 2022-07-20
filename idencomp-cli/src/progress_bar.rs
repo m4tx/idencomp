@@ -29,6 +29,7 @@ pub(crate) struct IdnProgressBar {
 impl IdnProgressBar {
     pub fn new() -> IdnProgressBar {
         let init_bar = ProgressBar::hidden();
+        init_bar.set_style(ProgressStyle::default_spinner());
         init_bar.enable_steady_tick(50);
         init_bar.set_message("Initializing...");
 

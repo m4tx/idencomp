@@ -53,13 +53,14 @@ impl<'a, W: Write + Seek> CompressorInitializer<'a, W> {
     fn retain_best_models(&mut self) {
         self.options.model_provider.preprocess_compressor_models();
 
+        let model_num = (self.options.quality.get() as usize + 1) / 2;
         let acid_models = self
             .model_chooser
-            .get_best_acid_models(self.sequences, self.options, 3)
+            .get_best_acid_models(self.sequences, self.options, model_num)
             .into_iter();
         let q_score_models = self
             .model_chooser
-            .get_best_q_score_models(self.sequences, self.options, 3)
+            .get_best_q_score_models(self.sequences, self.options, model_num)
             .into_iter();
         let identifiers: Vec<ModelIdentifier> = acid_models.chain(q_score_models).collect();
         debug!("Model identifiers:");

@@ -102,57 +102,76 @@ def output_stat(name: str, compress_time: float, decompress_time: float,
 
 
 compressors = [
+    # Compressor(
+    #     'gzip',
+    #     Command(['gzip', '-c'], output_stdout=True),
+    #     Command(['gzip', '-c', '-d'], output_stdout=True),
+    # ),
+    # Compressor(
+    #     'gzip_9',
+    #     Command(['gzip', '-c', '-9'], output_stdout=True),
+    #     Command(['gzip', '-c', '-d'], output_stdout=True),
+    # ),
+    # Compressor(
+    #     'bzip2',
+    #     Command(['bzip2', '-c'], output_stdout=True),
+    #     Command(['bzip2', '-c', '-d'], output_stdout=True),
+    # ),
+    # Compressor(
+    #     'bzip2_9',
+    #     Command(['bzip2', '-c', '-9'], output_stdout=True),
+    #     Command(['bzip2', '-c', '-d'], output_stdout=True),
+    # ),
+    # Compressor(
+    #     'lzma',
+    #     Command(['lzma', '-c', '--threads=12'], output_stdout=True),
+    #     Command(['lzma', '-c', '-d', '--threads=12'], output_stdout=True),
+    # ),
+    # Compressor(
+    #     'fqzcomp_q2',
+    #     Command(['fqzcomp', '-q2', '-s5+']),
+    #     Command(['fqzcomp', '-d']),
+    # ),
+    # Compressor(
+    #     'fqzcomp_q3',
+    #     Command(['fqzcomp', '-q3', '-s5+']),
+    #     Command(['fqzcomp', '-d']),
+    # ),
+    # Compressor(
+    #     'genozip',
+    #     Command(['genozip'], output_option='-o'),
+    #     Command(['genounzip'], output_option='-o'),
+    # ),
+    # Compressor(
+    #     'spring',
+    #     Command(['spring', '-c', '--no-ids', '-t12'],
+    #             input_option='-i', output_option='-o'),
+    #     Command(['spring', '-d', '-t12'],
+    #             input_option='-i', output_option='-o'),
+    # ),
+    # Compressor(
+    #     'dsrc2',
+    #     Command(['dsrc', 'c', '-m1', '-t12']),
+    #     Command(['dsrc', 'd', '-t12']),
+    # ),
     Compressor(
-        'gzip',
-        Command(['gzip', '-c'], output_stdout=True),
-        Command(['gzip', '-c', '-d'], output_stdout=True),
+        'idencomp',
+        Command(['idencomp', 'compress',
+                 '--no-progress', '-q', '--threads', '12', '--no-identifiers'],
+                output_option='-o'),
+        Command(['idencomp', 'decompress',
+                 '--no-progress', '-q', '--threads', '12'],
+                output_option='-o'),
     ),
     Compressor(
-        'gzip_9',
-        Command(['gzip', '-c', '-9'], output_stdout=True),
-        Command(['gzip', '-c', '-d'], output_stdout=True),
-    ),
-    Compressor(
-        'bzip2',
-        Command(['bzip2', '-c'], output_stdout=True),
-        Command(['bzip2', '-c', '-d'], output_stdout=True),
-    ),
-    Compressor(
-        'bzip2_9',
-        Command(['bzip2', '-c', '-9'], output_stdout=True),
-        Command(['bzip2', '-c', '-d'], output_stdout=True),
-    ),
-    Compressor(
-        'lzma',
-        Command(['lzma', '-c', '-T', '12'], output_stdout=True),
-        Command(['lzma', '-c', '-d', '-T', '12'], output_stdout=True),
-    ),
-    Compressor(
-        'fqzcomp_q2',
-        Command(['fqzcomp', '-q2', '-s5+']),
-        Command(['fqzcomp', '-d']),
-    ),
-    Compressor(
-        'fqzcomp_q3',
-        Command(['fqzcomp', '-q3', '-s5+']),
-        Command(['fqzcomp', '-d']),
-    ),
-    Compressor(
-        'genozip',
-        Command(['genozip'], output_option='-o'),
-        Command(['genounzip'], output_option='-o'),
-    ),
-    Compressor(
-        'spring',
-        Command(['spring', '-c', '--no-ids', '-t12'],
-                input_option='-i', output_option='-o'),
-        Command(['spring', '-d', '-t12'],
-                input_option='-i', output_option='-o'),
-    ),
-    Compressor(
-        'dsrc2',
-        Command(['dsrc', 'c', '-m1', '-t12']),
-        Command(['dsrc', 'd', '-t12']),
+        'idencomp_q1',
+        Command(['idencomp', 'compress',
+                 '--no-progress', '-q', '--threads', '12', '--no-identifiers',
+                 '--quality', '1'],
+                output_option='-o'),
+        Command(['idencomp', 'decompress',
+                 '--no-progress', '-q', '--threads', '12'],
+                output_option='-o'),
     ),
 ]
 
