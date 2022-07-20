@@ -197,7 +197,8 @@ impl Context {
     pub fn merge_with(&self, other: &Self) -> Self {
         assert_eq!(self.symbol_num(), other.symbol_num());
 
-        let context_prob = Probability::new(self.context_prob.get() + other.context_prob.get());
+        let context_prob_val = self.context_prob.get() + other.context_prob.get();
+        let context_prob = Probability::new(context_prob_val.min(1.0));
         let symbol_prob: Vec<Probability> = self
             .symbol_prob
             .iter()
@@ -208,7 +209,7 @@ impl Context {
                 if prob.is_nan() {
                     Probability::new(0.0)
                 } else {
-                    Probability::new(prob)
+                    Probability::new(prob.min(1.0))
                 }
             })
             .collect();

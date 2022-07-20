@@ -1,5 +1,4 @@
 target/
 data/
 out/
-models/
 *.log
