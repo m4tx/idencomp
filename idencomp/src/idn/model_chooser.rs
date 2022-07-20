@@ -141,42 +141,57 @@ impl ModelChooser {
         &mut self,
         sequence: &FastqSequence,
         options: &'a IdnCompressorOptions,
+        current_model: Option<&ModelIdentifier>,
     ) -> (usize, &'a AcidRansEncModel) {
         debug!(
             "Calculating the best acid model for `{}`",
             sequence.identifier()
         );
         let models = options.model_provider.acid_enc_models();
-        self.get_best_model_for(sequence, models)
+        self.get_best_model_for(sequence, models, current_model)
     }
 
     pub fn get_best_q_score_model_for<'a>(
         &mut self,
         sequence: &FastqSequence,
         options: &'a IdnCompressorOptions,
+        current_model: Option<&ModelIdentifier>,
     ) -> (usize, &'a QScoreRansEncModel) {
         debug!(
             "Calculating the best quality score model for `{}`",
             sequence.identifier()
         );
         let models = options.model_provider.q_score_enc_models();
-        self.get_best_model_for(sequence, models)
+        self.get_best_model_for(sequence, models, current_model)
     }
 
     fn get_best_model_for<'a, const SYMBOLS_NUM: usize, T>(
         &mut self,
         sequence: &FastqSequence,
         models: T,
+        current_model: Option<&ModelIdentifier>,
     ) -> (usize, &'a RansEncModel<SYMBOLS_NUM>)
     where
         T: Iterator<Item = &'a RansEncModel<SYMBOLS_NUM>>,
     {
+        const SWITCH_MODEL_PENALTY: usize = 2;
+
         models
             .map(|model| {
                 let len = self.model_tester.compute_size(sequence, model);
-                debug!("Length with model {}: {}", model.identifier(), len);
+                let penalty = if Some(model.identifier()) != current_model {
+                    SWITCH_MODEL_PENALTY
+                } else {
+                    0
+                };
+                debug!(
+                    "Length with model {}: {} + {} (penalty)",
+                    model.identifier(),
+                    len,
+                    penalty
+                );
 
-                (len, model)
+                (len + penalty, model)
             })
             .min_by(|(len_1, _), (len_2, _)| len_1.cmp(len_2))
             .expect("No quality models provided")

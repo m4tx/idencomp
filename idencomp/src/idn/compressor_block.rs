@@ -221,10 +221,14 @@ impl<W: Write> IdnBlockCompressor<W> {
         sequence: &FastqSequence,
         options: &'a IdnCompressorOptions,
     ) -> IdnWriteResult<&'a AcidRansEncModel> {
-        let (bytes, model) = self
-            .model_chooser
-            .get_best_acid_model_for(sequence, options);
+        let current_identifier = self
+            .current_acid_model
+            .map(|index| self.options.model_provider[index as usize].identifier());
+        let (bytes, model) =
+            self.model_chooser
+                .get_best_acid_model_for(sequence, options, current_identifier);
         let index = options.model_provider.index_of(model.identifier()) as u8;
+
         if self.current_acid_model != Some(index) {
             self.block_writer.write_switch_model(index)?;
             self.current_acid_model = Some(index);
@@ -232,8 +236,8 @@ impl<W: Write> IdnBlockCompressor<W> {
             debug!("Switching to acid model: {}", model.identifier());
             self.acid_model_switches += 1;
         }
-        self.out_acid_bytes += bytes;
 
+        self.out_acid_bytes += bytes;
         Ok(model)
     }
 
@@ -242,10 +246,14 @@ impl<W: Write> IdnBlockCompressor<W> {
         sequence: &FastqSequence,
         options: &'a IdnCompressorOptions,
     ) -> IdnWriteResult<&'a QScoreRansEncModel> {
-        let (bytes, model) = self
-            .model_chooser
-            .get_best_q_score_model_for(sequence, options);
+        let current_identifier = self
+            .current_q_score_model
+            .map(|index| self.options.model_provider[index as usize].identifier());
+        let (bytes, model) =
+            self.model_chooser
+                .get_best_q_score_model_for(sequence, options, current_identifier);
         let index = options.model_provider.index_of(model.identifier()) as u8;
+
         if self.current_q_score_model != Some(index) {
             self.block_writer.write_switch_model(index)?;
             self.current_q_score_model = Some(index);
@@ -253,8 +261,8 @@ impl<W: Write> IdnBlockCompressor<W> {
             debug!("Switching to quality score model: {}", model.identifier());
             self.q_score_model_switches += 1;
         }
-        self.out_q_score_bytes += bytes;
 
+        self.out_q_score_bytes += bytes;
         Ok(model)
     }
 }
