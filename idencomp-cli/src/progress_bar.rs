@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use idencomp::progress::{ByteNum, ProgressNotifier};
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 
 #[derive(Debug)]
 struct IdnProgressBarState {
@@ -28,7 +28,7 @@ pub(crate) struct IdnProgressBar {
 
 impl IdnProgressBar {
     pub fn new() -> IdnProgressBar {
-        let init_bar = ProgressBar::new_spinner();
+        let init_bar = ProgressBar::hidden();
         init_bar.enable_steady_tick(50);
         init_bar.set_message("Initializing...");
 
@@ -36,6 +36,10 @@ impl IdnProgressBar {
             bar: init_bar,
             state: Arc::new(Mutex::new(IdnProgressBarState::new())),
         }
+    }
+
+    pub fn show(&self) {
+        self.bar.set_draw_target(ProgressDrawTarget::stderr());
     }
 
     pub fn is_hidden(&self) -> bool {

@@ -70,7 +70,7 @@ impl ModelChooser {
         }
     }
 
-    const CLUSTERING_THRESHOLD: CompressionQuality = CompressionQuality::new(5);
+    const CLUSTERING_THRESHOLD: CompressionQuality = CompressionQuality::new(2);
     fn use_clustering(options: &IdnCompressorOptions) -> bool {
         options.quality >= Self::CLUSTERING_THRESHOLD
     }

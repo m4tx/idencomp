@@ -34,6 +34,10 @@ fn main() -> anyhow::Result<()> {
 
     let cli: Cli = Cli::parse();
 
+    if !cli.no_progress {
+        PROGRESS_BAR.show();
+    }
+
     init_logging(cli.verbose.log_level_filter()).expect("Could not initialize logging");
 
     match &cli.command {

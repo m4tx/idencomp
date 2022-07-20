@@ -207,7 +207,7 @@ impl<const SYMBOLS_NUM: usize> RansDecModel<SYMBOLS_NUM> {
 
 /// Checks the model before preprocessing to avoid using too much memory
 fn check_model(model: &Model) {
-    const MAX_CONTEXT_NUM: usize = 10_000;
+    const MAX_CONTEXT_NUM: usize = 65_536;
 
     let context_num = model.len();
     if context_num > MAX_CONTEXT_NUM {

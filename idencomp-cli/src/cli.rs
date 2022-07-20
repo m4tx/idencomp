@@ -16,6 +16,10 @@ pub struct Cli {
     #[clap(flatten)]
     pub verbose: Verbosity<InfoLevel>,
 
+    /// Don't display a progress bar/spinner
+    #[clap(long, global = true, value_parser)]
+    pub no_progress: bool,
+
     #[clap(subcommand)]
     pub command: Commands,
 }

@@ -1,11 +1,11 @@
 use std::collections::{HashMap, HashSet};
-use std::fs::File;
+use std::fs::{DirEntry, File};
 use std::ops::Index;
 use std::path::Path;
 use std::{fs, mem};
 
-use itertools::Itertools;
 use log::debug;
+use rayon::prelude::{IntoParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::model::{Model, ModelIdentifier, ModelType};
 use crate::model_serializer::SerializableModel;
@@ -16,7 +16,7 @@ use crate::sequence_compressor::{
 #[derive(Debug, Clone)]
 pub struct ModelProvider {
     models: Vec<Model>,
-    map: HashMap<ModelIdentifier, usize>,
+    index_map: HashMap<ModelIdentifier, usize>,
 
     compressor_models: Vec<CompressorModel>,
     decompressor_models: Vec<DecompressorModel>,
@@ -29,11 +29,11 @@ impl ModelProvider {
 
         let mut provider = Self {
             models,
-            map: HashMap::with_capacity(model_num),
+            index_map: HashMap::with_capacity(model_num),
             compressor_models: Vec::new(),
             decompressor_models: Vec::new(),
         };
-        provider.fill_map();
+        provider.rebuild_index_map();
         provider
     }
 
@@ -47,35 +47,40 @@ impl ModelProvider {
 
     pub fn from_directory(directory: &Path) -> Result<Self, anyhow::Error> {
         let paths = fs::read_dir(directory)?;
+        let paths: Vec<Result<DirEntry, _>> = paths.collect();
 
-        let mut models = Vec::new();
-        for dir_entry in paths {
-            let dir_entry = dir_entry?;
-            let path = &dir_entry.path();
-            let file = File::open(path)?;
-            let model = SerializableModel::read_model(file)?;
+        let models: Result<Vec<Model>, anyhow::Error> = paths
+            .into_par_iter()
+            .map(|dir_entry| {
+                let dir_entry = dir_entry?;
+                let path = &dir_entry.path();
+                let file = File::open(path)?;
+                let model = SerializableModel::read_model(file)?;
 
-            debug!(
-                "Registering model {} with type {} from `{}`",
-                model.identifier(),
-                model.model_type(),
-                path.file_name().unwrap().to_string_lossy()
-            );
-            models.push(model);
-        }
+                debug!(
+                    "Registering model {} with type {} from `{}`",
+                    model.identifier(),
+                    model.model_type(),
+                    path.file_name().unwrap().to_string_lossy()
+                );
 
-        Ok(Self::new(models))
+                Ok(model)
+            })
+            .collect();
+
+        Ok(Self::new(models?))
     }
 
-    fn fill_map(&mut self) {
+    fn rebuild_index_map(&mut self) {
+        self.index_map.clear();
         for (index, context) in self.models.iter().enumerate() {
-            self.map.insert(context.identifier().clone(), index);
+            self.index_map.insert(context.identifier().clone(), index);
         }
     }
 
     #[must_use]
     pub fn index_of(&self, identifier: &ModelIdentifier) -> usize {
-        self.map[identifier]
+        self.index_map[identifier]
     }
 
     #[must_use]
@@ -84,11 +89,11 @@ impl ModelProvider {
     }
 
     pub fn preprocess_compressor_models(&mut self) {
-        self.compressor_models = self.models.iter().map_into().collect();
+        self.compressor_models = self.models.par_iter().map(|x| x.into()).collect();
     }
 
     pub fn preprocess_decompressor_models(&mut self) {
-        self.decompressor_models = self.models.iter().map_into().collect();
+        self.decompressor_models = self.models.par_iter().map(|x| x.into()).collect();
     }
 
     #[must_use]
@@ -159,6 +164,8 @@ impl ModelProvider {
                 })
                 .collect();
         }
+
+        self.rebuild_index_map();
     }
 
     pub fn len(&self) -> usize {

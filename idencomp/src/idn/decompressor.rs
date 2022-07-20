@@ -318,6 +318,10 @@ impl<R: Read> IdnDecompressorInner<R> {
             .has_all_models(&identifiers)
             .map_err(IdnDecompressorError::unknown_model)?;
         options.model_provider.filter_by_identifiers(&identifiers);
+        debug!("Model identifiers:");
+        for (index, identifier) in identifiers.iter().enumerate() {
+            debug!("[{}] {}", index, identifier);
+        }
         options.model_provider.preprocess_decompressor_models();
 
         Ok(())

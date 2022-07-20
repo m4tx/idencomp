@@ -1,5 +1,7 @@
 use std::io::{Seek, Write};
 
+use log::debug;
+
 use crate::fastq::FastqSequence;
 use crate::idn::compressor::{IdnCompressorOptions, IdnWriteResult};
 use crate::idn::model_chooser::ModelChooser;
@@ -60,6 +62,10 @@ impl<'a, W: Write + Seek> CompressorInitializer<'a, W> {
             .get_best_q_score_models(self.sequences, self.options, 3)
             .into_iter();
         let identifiers: Vec<ModelIdentifier> = acid_models.chain(q_score_models).collect();
+        debug!("Model identifiers:");
+        for (index, identifier) in identifiers.iter().enumerate() {
+            debug!("[{}] {}", index, identifier);
+        }
 
         self.options
             .model_provider
