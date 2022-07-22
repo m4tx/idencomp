@@ -38,7 +38,6 @@ pub struct IdnModelsMetadata {
 pub struct IdnBlockHeader {
     pub length: u32,
     pub seq_checksum: u32,
-    pub block_num: u32,
 }
 
 #[binrw]

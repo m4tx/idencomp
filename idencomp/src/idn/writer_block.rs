@@ -12,7 +12,6 @@ use crate::idn::data::{
 
 pub(super) struct BlockWriter {
     data: Cursor<Vec<u8>>,
-    slices_num: u32,
     hasher: crc32fast::Hasher,
 }
 
@@ -21,7 +20,6 @@ impl BlockWriter {
     pub fn new() -> Self {
         Self {
             data: Cursor::new(Vec::new()),
-            slices_num: 0,
             hasher: crc32fast::Hasher::new(),
         }
     }
@@ -33,7 +31,6 @@ impl BlockWriter {
         let header = IdnBlockHeader {
             length: data.len() as u32,
             seq_checksum: checksum,
-            block_num: self.slices_num,
         };
 
         header.write_to(&mut writer)?;
@@ -81,7 +78,6 @@ impl BlockWriter {
     }
 
     fn write_slice_header(&mut self, header: IdnSliceHeader) -> IdnWriteResult<()> {
-        self.slices_num += 1;
         header.write_to(&mut self.data)?;
         Ok(())
     }
