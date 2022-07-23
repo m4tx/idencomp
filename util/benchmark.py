@@ -13,9 +13,11 @@ parser = argparse.ArgumentParser(
     description='Benchmark given FASTQ file against predefined compressors '
                 'and output the statistics as csv to stdout')
 parser.add_argument(
-    'input', help='input file path')
+    'input', help='input file path', nargs='?')
 parser.add_argument(
     '--remove', action='store_true', help='remove the intermediate files')
+parser.add_argument(
+    '--list', action='store_true', help='list the tools being used and exit')
 args = parser.parse_args()
 
 
@@ -81,9 +83,6 @@ def human_bytes(num: float) -> str:
 
 
 csv_writer = csv.writer(sys.stdout)
-csv_writer.writerow(
-    ['cmd', 'input_size', 'output_size', 'compress_time', 'decompress_time',
-     'ratio', 'compress_speed', 'decompress_speed'])
 
 
 def output_stat(name: str, compress_time: float, decompress_time: float,
@@ -128,9 +127,9 @@ compressors = [
         Command(['bzip2', '-c', '-d'], output_stdout=True),
     ),
     Compressor(
-        'lzma',
-        Command(['lzma', '-c', '--threads=12'], output_stdout=True),
-        Command(['lzma', '-c', '-d', '--threads=12'], output_stdout=True),
+        'xz',
+        Command(['xz', '-c', '--threads=16'], output_stdout=True),
+        Command(['xz', '-c', '-d', '--threads=16'], output_stdout=True),
     ),
     Compressor(
         'fqzcomp_q2',
@@ -149,36 +148,48 @@ compressors = [
     ),
     Compressor(
         'spring',
-        Command(['spring', '-c', '--no-ids', '-t12'],
+        Command(['spring', '-c', '--no-ids', '-t16'],
                 input_option='-i', output_option='-o'),
-        Command(['spring', '-d', '-t12'],
+        Command(['spring', '-d', '-t16'],
                 input_option='-i', output_option='-o'),
     ),
     Compressor(
         'dsrc2',
-        Command(['dsrc', 'c', '-m1', '-t12']),
-        Command(['dsrc', 'd', '-t12']),
+        Command(['dsrc', 'c', '-m1', '-t16']),
+        Command(['dsrc', 'd', '-t16']),
     ),
     Compressor(
         'idencomp',
         Command(['idencomp', 'compress',
-                 '--no-progress', '-q', '--threads', '12', '--no-identifiers'],
+                 '--no-progress', '-q', '--threads', '16', '--no-identifiers'],
                 output_option='-o'),
         Command(['idencomp', 'decompress',
-                 '--no-progress', '-q', '--threads', '12'],
+                 '--no-progress', '-q', '--threads', '16'],
                 output_option='-o'),
     ),
     Compressor(
         'idencomp_q1',
         Command(['idencomp', 'compress',
-                 '--no-progress', '-q', '--threads', '12', '--no-identifiers',
+                 '--no-progress', '-q', '--threads', '16', '--no-identifiers',
                  '--quality', '1'],
                 output_option='-o'),
         Command(['idencomp', 'decompress',
-                 '--no-progress', '-q', '--threads', '12'],
+                 '--no-progress', '-q', '--threads', '16'],
                 output_option='-o'),
     ),
 ]
+
+if args.list:
+    for compressor in compressors:
+        eprint(compressor.name)
+        eprint(compressor.compress.description())
+        eprint(compressor.decompress.description())
+        eprint()
+    sys.exit(0)
+
+csv_writer.writerow(
+    ['cmd', 'input_size', 'output_size', 'compress_time', 'decompress_time',
+     'ratio', 'compress_speed', 'decompress_speed'])
 
 input_path = Path(args.input)
 input_size = input_path.stat().st_size
