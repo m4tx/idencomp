@@ -116,6 +116,7 @@ fn main() -> anyhow::Result<()> {
             block_length,
             no_identifiers,
             quality,
+            fast,
         } => {
             let reader = input.as_reader()?;
             PROGRESS_BAR.set_total_bytes(reader.length()?.unwrap_or(0));
@@ -129,6 +130,7 @@ fn main() -> anyhow::Result<()> {
                 *block_length,
                 *no_identifiers,
                 *quality,
+                *fast,
                 Arc::new(PROGRESS_BAR.clone()),
             )
             .context("Failed to compress given file")?;

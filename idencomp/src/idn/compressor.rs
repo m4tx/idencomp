@@ -104,6 +104,7 @@ pub struct IdnCompressorParams {
     thread_num: usize,
     include_identifiers: bool,
     quality: CompressionQuality,
+    fast: bool,
 }
 
 impl IdnCompressorParams {
@@ -126,6 +127,7 @@ pub struct IdnCompressorParamsBuilder {
     thread_num: usize,
     include_identifiers: bool,
     quality: CompressionQuality,
+    fast: bool,
 }
 
 impl IdnCompressorParamsBuilder {
@@ -137,6 +139,7 @@ impl IdnCompressorParamsBuilder {
             thread_num: 0,
             include_identifiers: true,
             quality: CompressionQuality::default(),
+            fast: false,
         }
     }
 
@@ -176,6 +179,15 @@ impl IdnCompressorParamsBuilder {
         new
     }
 
+    pub fn fast(&mut self, fast: bool) -> &mut Self {
+        let mut new = self;
+        new.fast = fast;
+        if fast {
+            new.quality = CompressionQuality::new(1);
+        }
+        new
+    }
+
     pub fn build(&mut self) -> IdnCompressorParams {
         IdnCompressorParams {
             model_provider: self.model_provider.clone(),
@@ -184,6 +196,7 @@ impl IdnCompressorParamsBuilder {
             thread_num: self.thread_num,
             include_identifiers: self.include_identifiers,
             quality: self.quality,
+            fast: self.fast,
         }
     }
 }
@@ -200,6 +213,7 @@ pub struct IdnCompressorOptions {
     pub(super) progress_notifier: Arc<dyn ProgressNotifier>,
     pub(super) include_identifiers: bool,
     pub(super) quality: CompressionQuality,
+    pub(super) fast: bool,
 }
 
 impl From<IdnCompressorParams> for IdnCompressorOptions {
@@ -209,6 +223,7 @@ impl From<IdnCompressorParams> for IdnCompressorOptions {
             progress_notifier: params.progress_notifier,
             include_identifiers: params.include_identifiers,
             quality: params.quality,
+            fast: params.fast,
         }
     }
 }

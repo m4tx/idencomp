@@ -192,6 +192,11 @@ pub enum Commands {
         /// Compression quality (1 - fast, 9 - best)
         #[clap(default_value_t = 7, long, value_parser = clap::value_parser!(u8).range(1..=9))]
         quality: u8,
+
+        /// Make compression as fast as possible. Affects displaying statistics.
+        /// Implies --quality=1
+        #[clap(long, value_parser)]
+        fast: bool,
     },
 
     /// Decompress an IDN file to FASTQ file

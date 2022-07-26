@@ -92,9 +92,22 @@ impl<W: Write> IdnBlockCompressor<W> {
             self.write_identifiers(&sequences, &options)?;
         }
 
+        if options.fast {
+            assert_eq!(self.options.model_provider.len(), 2);
+            self.block_writer.write_switch_model(0)?;
+            self.block_writer.write_switch_model(1)?;
+        }
+        let default_acid_model = options.model_provider.acid_enc_models().nth(0).unwrap();
+        let default_q_score_model = options.model_provider.q_score_enc_models().nth(0).unwrap();
+
         for sequence in sequences.iter() {
-            let acid_model = self.switch_to_best_acid_model_for(sequence, &options)?;
-            let q_score_model = self.switch_to_best_q_score_model_for(sequence, &options)?;
+            let (acid_model, q_score_model) = if options.fast {
+                (default_acid_model, default_q_score_model)
+            } else {
+                let acid_model = self.switch_to_best_acid_model_for(sequence, &options)?;
+                let q_score_model = self.switch_to_best_q_score_model_for(sequence, &options)?;
+                (acid_model, q_score_model)
+            };
 
             self.in_bytes += sequence.size();
             self.in_symbols += sequence.len();

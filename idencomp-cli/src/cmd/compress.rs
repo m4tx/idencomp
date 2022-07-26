@@ -15,6 +15,7 @@ pub fn compress<R: Read, W: Write + Send>(
     block_length: Option<usize>,
     no_identifiers: bool,
     quality: u8,
+    fast: bool,
     progress_notifier: Arc<dyn ProgressNotifier>,
 ) -> anyhow::Result<()> {
     let fastq_reader = FastqReader::new(BufReader::new(reader));
@@ -24,6 +25,7 @@ pub fn compress<R: Read, W: Write + Send>(
         .model_provider(ModelProvider::from_directory(Path::new("models/"))?)
         .progress_notifier(progress_notifier)
         .quality(CompressionQuality::new(quality))
+        .fast(fast)
         .include_identifiers(!no_identifiers);
     if let Some(threads) = threads {
         params.thread_num(threads);
