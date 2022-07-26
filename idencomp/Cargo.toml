@@ -39,7 +39,7 @@ log = "0.4.17"
 number_prefix = "0.4.0"
 rand = "0.8.5"
 rand_xoshiro = "0.6.0"
-rans = "0.2.0"
+rans = "0.2.1"
 rayon = "1.5.3"
 rmp-serde = "1.1.0"
 serde = { version = "1.0.137", features = ["derive"] }

@@ -1028,9 +1028,9 @@ dependencies = [
 
 [[package]]
 name = "rans"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "18434a18978519d97f88cd9c9b47ada9f0417cb677462223becf39724c93228d"
+checksum = "2a31604e04a742ffbafdaf0f88ebe3c4d31b78e15abb7ae0b2cab446011b0671"
 dependencies = [
  "ryg-rans-sys",
 ]
