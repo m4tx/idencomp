@@ -21,8 +21,8 @@ path = "tests/compile_tests.rs"
 [dependencies]
 syn = { version = "1.0.98", features = ["full"] }
 quote = "1.0.20"
-proc-macro2 = "1.0.40"
+proc-macro2 = "1.0.42"
 
 [dev-dependencies]
 trybuild = { version = "1.0.63", features = ["diff"] }
-serde = { version = "1.0.137", features = ["derive"] }
+serde = { version = "1.0.140", features = ["derive"] }

@@ -5,7 +5,7 @@ idencomp (遺伝コンプレッサー)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/m4tx/idencomp/blob/master/LICENSE)
 [![codecov](https://codecov.io/gh/m4tx/idencomp/branch/master/graph/badge.svg?token=6YWGUVOZH4)](https://codecov.io/gh/m4tx/idencomp)
 
-idencomp (jap. 遺伝コンプレ ッ サー (idenkonpuressa) — "genetic compressor") is an
+idencomp (jap. 遺伝コンプレッサー (idenkonpuressa) — "genetic compressor") is an
 attempt on building a compression tool for genetic data (precisely, for FASTQ
 files). The goal is beat the performance of most commonly used tools, while
 maintaining a decent compression ratio.
