@@ -97,8 +97,8 @@ impl<W: Write> IdnBlockCompressor<W> {
             self.block_writer.write_switch_model(0)?;
             self.block_writer.write_switch_model(1)?;
         }
-        let default_acid_model = options.model_provider.acid_enc_models().nth(0).unwrap();
-        let default_q_score_model = options.model_provider.q_score_enc_models().nth(0).unwrap();
+        let default_acid_model = options.model_provider.acid_enc_models().next().unwrap();
+        let default_q_score_model = options.model_provider.q_score_enc_models().next().unwrap();
 
         for sequence in sequences.iter() {
             let (acid_model, q_score_model) = if options.fast {

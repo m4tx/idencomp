@@ -178,9 +178,9 @@ mod tests {
 
     use crate::_internal_test_data::{
         EMPTY_TEST_SEQUENCE, EMPTY_TEST_SEQUENCE_STR, SEQ_1M, SEQ_1M_FASTQ, SIMPLE_TEST_SEQUENCE,
-        SIMPLE_TEST_SEQUENCE_STR,
+        SIMPLE_TEST_SEQUENCE_SEPARATOR_TITLE_STR, SIMPLE_TEST_SEQUENCE_STR,
     };
-    use crate::fastq::writer::{FastqWriter, FastqWriterError};
+    use crate::fastq::writer::{FastqWriter, FastqWriterError, FastqWriterParams};
 
     #[test]
     fn should_return_empty_seq() {
@@ -214,6 +214,22 @@ mod tests {
             .unwrap();
 
         assert_eq!(String::from_utf8(buf).unwrap(), SIMPLE_TEST_SEQUENCE_STR);
+    }
+
+    #[test]
+    fn should_return_simple_seq_with_title_at_separator() {
+        let mut buf = Vec::new();
+        let params = FastqWriterParams::builder()
+            .output_title_with_separator(true)
+            .build();
+        FastqWriter::with_params(&mut buf, params)
+            .write_sequence(&SIMPLE_TEST_SEQUENCE)
+            .unwrap();
+
+        assert_eq!(
+            String::from_utf8(buf).unwrap(),
+            SIMPLE_TEST_SEQUENCE_SEPARATOR_TITLE_STR
+        );
     }
 
     #[test]

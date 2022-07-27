@@ -28,6 +28,12 @@ GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT
 !''*((((***+))%%%++)(%%%%).1***-+*''))**55CCF>>>>>>CCCCCCC65
 ";
 
+pub const SIMPLE_TEST_SEQUENCE_SEPARATOR_TITLE_STR: &str = "@SEQ_ID
+GATTTGGGGTTCAAAGCAGTATCGATCAAATAGTAAATCCATTTGTTCAACTCACAGTTT
++SEQ_ID
+!''*((((***+))%%%++)(%%%%).1***-+*''))**55CCF>>>>>>CCCCCCC65
+";
+
 lazy_static! {
     pub static ref SHORT_TEST_SEQUENCE: FastqSequence = FastqSequence::new(
         "",

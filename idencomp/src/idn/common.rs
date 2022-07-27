@@ -172,3 +172,20 @@ pub(crate) fn format_bytes(bytes: ByteNum) -> String {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::idn::common::format_bytes;
+    use crate::progress::ByteNum;
+
+    #[test]
+    fn test_format_bytes() {
+        assert_eq!(format_bytes(ByteNum::new(0)), "0 bytes");
+        assert_eq!(format_bytes(ByteNum::new(1)), "1 bytes");
+        assert_eq!(format_bytes(ByteNum::new(100)), "100 bytes");
+        assert_eq!(format_bytes(ByteNum::new(1_000)), "1.00 kB");
+        assert_eq!(format_bytes(ByteNum::new(1_547)), "1.55 kB");
+        assert_eq!(format_bytes(ByteNum::new(1_000_000)), "1.00 MB");
+        assert_eq!(format_bytes(ByteNum::new(1_000_000_000)), "1.00 GB");
+    }
+}

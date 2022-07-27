@@ -78,6 +78,11 @@ impl Entropy {
 
         Self(value)
     }
+
+    #[must_use]
+    pub fn get(&self) -> f32 {
+        self.0
+    }
 }
 
 impl Add for Entropy {
@@ -142,6 +147,10 @@ impl Ord for ContextMergeCost {
     }
 }
 
+/// A statistical model for a single local situation ("context").
+///
+/// Contains the probabilities of each symbol, and the probability of
+/// encountering this specific context as well.
 #[derive(Debug, Clone)]
 pub struct Context {
     pub context_prob: Probability,
@@ -151,6 +160,18 @@ pub struct Context {
 }
 
 impl Context {
+    /// Creates new `Context` object.
+    ///
+    /// ## Examples
+    /// ```
+    /// use idencomp::context::{Context, Probability};
+    ///
+    /// let context = Context::new(Probability::ONE, [Probability::ZERO, Probability::ONE]);
+    /// assert_eq!(context.symbol_num(), 2);
+    /// assert_eq!(context.entropy().get(), 0.0);
+    /// assert_eq!(context.context_prob.get(), 1.0);
+    /// assert_eq!(context.symbol_prob[1].get(), 1.0);
+    /// ```
     #[must_use]
     pub fn new<U: Into<Vec<Probability>>>(context_prob: Probability, symbol_prob: U) -> Self {
         let symbol_prob = symbol_prob.into();
@@ -163,6 +184,18 @@ impl Context {
         }
     }
 
+    /// Creates new `Context` object, converting the passed values if needed.
+    ///
+    /// ## Examples
+    /// ```
+    /// use idencomp::context::{Context, Probability};
+    ///
+    /// let context = Context::new_from(1.0, [0.25, 0.25, 0.25, 0.25]);
+    /// assert_eq!(context.symbol_num(), 4);
+    /// assert_eq!(context.entropy().get(), 2.0);
+    /// assert_eq!(context.context_prob.get(), 1.0);
+    /// assert_eq!(context.symbol_prob[0].get(), 0.25);
+    /// ```
     #[must_use]
     pub fn new_from<T: Into<Probability>, U: Into<Probability>, I>(
         context_prob: T,
@@ -188,6 +221,15 @@ impl Context {
         Self::new(Probability::ONE, symbol_prob)
     }
 
+    /// Returns the number of symbols for this `Context` object.
+    ///
+    /// ## Examples
+    /// ```
+    /// use idencomp::context::{Context, Probability};
+    ///
+    /// let context = Context::new_from(1.0, [0.25, 0.25, 0.25, 0.25]);
+    /// assert_eq!(context.symbol_num(), 4);
+    /// ```
     #[must_use]
     pub fn symbol_num(&self) -> usize {
         self.symbol_prob.len()
@@ -387,19 +429,6 @@ impl ContextNode {
     }
 
     #[must_use]
-    pub fn is_leaf(&self) -> bool {
-        match self {
-            ContextNode::Leaf { .. } => true,
-            ContextNode::Node { .. } => false,
-        }
-    }
-
-    #[must_use]
-    pub fn is_node(&self) -> bool {
-        !self.is_leaf()
-    }
-
-    #[must_use]
     pub fn context(&self) -> &Context {
         match self {
             ContextNode::Leaf { context, .. } => context,
@@ -412,18 +441,6 @@ impl ContextNode {
         match self {
             ContextNode::Leaf { .. } => ContextMergeCost::ZERO,
             ContextNode::Node { merge_cost, .. } => *merge_cost,
-        }
-    }
-
-    #[must_use]
-    pub fn children(&self) -> (usize, usize) {
-        match self {
-            ContextNode::Leaf { .. } => panic!("called children() on a leaf node"),
-            ContextNode::Node {
-                left_child,
-                right_child,
-                ..
-            } => (*left_child, *right_child),
         }
     }
 }

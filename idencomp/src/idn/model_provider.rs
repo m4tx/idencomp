@@ -83,11 +83,6 @@ impl ModelProvider {
         self.index_map[identifier]
     }
 
-    #[must_use]
-    pub fn by_identifier(&self, identifier: &ModelIdentifier) -> &Model {
-        &self.models[self.index_of(identifier)]
-    }
-
     pub fn preprocess_compressor_models(&mut self) {
         self.compressor_models = self.models.par_iter().map(|x| x.into()).collect();
     }

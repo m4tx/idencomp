@@ -18,7 +18,7 @@ This is based on several building blocks:
 
 The compressor has been built with modern multicore CPUs in mind and can utilize
 multiple cores/threads for all the critical parts. It contains a CLI interface
-and a Rust library.
+and an accompanying Rust library.
 
 ## License
 
