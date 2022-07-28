@@ -2,19 +2,39 @@ use std::fmt::Debug;
 
 use derive_more::{Add, AddAssign};
 
+/// An integer number of bytes.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Add, AddAssign)]
 #[repr(transparent)]
 pub struct ByteNum(usize);
 
 impl ByteNum {
+    /// The `ByteNum` instance with a value of `0`.
     pub const ZERO: ByteNum = ByteNum(0);
 
+    /// Creates a new `ByteNum` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::progress::ByteNum;
+    ///
+    /// let bytes = ByteNum::new(123);
+    /// assert_eq!(bytes.get(), 123);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn new(bytes: usize) -> Self {
         Self(bytes)
     }
 
+    /// Returns the value of this `ByteNum` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::progress::ByteNum;
+    ///
+    /// let bytes = ByteNum::new(123);
+    /// assert_eq!(bytes.get(), 123);
+    /// ```
     #[inline]
     #[must_use]
     pub const fn get(&self) -> usize {
@@ -44,6 +64,7 @@ impl<T: ProgressNotifier> ProgressNotifier for &T {
     }
 }
 
+/// A no-operation implementation of [`ProgressNotifier`].
 #[derive(Clone, Debug)]
 pub(crate) struct DummyProgressNotifier;
 

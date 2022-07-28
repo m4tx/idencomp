@@ -1,3 +1,5 @@
+#![warn(missing_docs)]
+
 //! idencomp (jap. 遺伝コンプレッサー (idenkonpuressa) — "genetic compressor")
 //! is an attempt on building a compression tool for genetic data (precisely,
 //! for FASTQ files). The goal is beat the performance of most commonly used
@@ -15,13 +17,23 @@
 //! interface and an accompanying Rust library.
 
 mod compressor;
+/// Statistical model for a single local situation.
 pub mod context;
+/// Context binning module that can be used to make smaller models while
+/// maintaining decent compression rate.
 pub mod context_binning;
+/// Context specifier generators that can describe local situations in a
+/// sequence with a single number.
 pub mod context_spec;
+/// FASTQ file reader and writer.
 pub mod fastq;
+/// IDN compressor, decompressor, and utilities around.
 pub mod idn;
+/// Statistical model used to compress/decompress sequences.
 pub mod model;
+/// Utilities that can be used to create models using nucleotide sequences.
 pub mod model_generator;
+/// Nucleotide sequence and its building blocks.
 pub mod sequence;
 mod sequence_compressor;
 
@@ -29,5 +41,8 @@ mod sequence_compressor;
 pub mod _internal_test_data;
 mod clustering;
 mod int_queue;
+/// Serializer and deserializer of the statistical model.
 pub mod model_serializer;
+/// Progress notifier that can be used to get the progress of the long-running
+/// operations.
 pub mod progress;

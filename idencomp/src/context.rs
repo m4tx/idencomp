@@ -6,9 +6,7 @@ use derive_more::Deref;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use crate::context_spec::ContextSpec;
-
-/// Probability, as a float between 0.0 and 1.0
+/// Probability, as a float between 0.0 and 1.0.
 #[derive(Copy, Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Probability(f32);
@@ -24,6 +22,14 @@ impl Probability {
     const EQ_THRESHOLD: Probability = Probability(1e-6);
 
     /// Creates a new `Probability` object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Probability;
+    ///
+    /// let prob = Probability::new(0.5);
+    /// assert_eq!(prob.get(), 0.5);
+    /// ```
     #[must_use]
     pub fn new(value: f32) -> Self {
         assert!(value.is_finite());
@@ -33,7 +39,15 @@ impl Probability {
         Self(value)
     }
 
-    /// Value of this Probability object, as a float
+    /// Value of this `Probability` object, as a float.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Probability;
+    ///
+    /// let prob = Probability::new(0.5);
+    /// assert_eq!(prob.get(), 0.5);
+    /// ```
     #[must_use]
     pub fn get(&self) -> f32 {
         self.0
@@ -66,11 +80,28 @@ impl Ord for Probability {
     }
 }
 
+/// Shannon Entropy, as a non-negative float representing the number of entropy
+/// bits.
+///
+/// # See also
+/// * [Entropy on Wikipedia](https://en.wikipedia.org/wiki/Entropy_%28information_theory%29)
 #[derive(Deref, Copy, Debug, PartialEq, Clone, Default)]
 #[repr(transparent)]
 pub struct Entropy(f32);
 
 impl Entropy {
+    /// Creates a new `Entropy` object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Entropy;
+    ///
+    /// let entropy = Entropy::new(0.5);
+    /// assert_eq!(entropy.get(), 0.5);
+    /// ```
+    ///
+    /// # Panics
+    /// This function panics if the value is negative, or is not finite.
     #[must_use]
     pub fn new(value: f32) -> Self {
         assert!(value.is_finite());
@@ -79,6 +110,15 @@ impl Entropy {
         Self(value)
     }
 
+    /// Value of this `Entropy` object, as a float.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Entropy;
+    ///
+    /// let entropy = Entropy::new(0.5);
+    /// assert_eq!(entropy.get(), 0.5);
+    /// ```
     #[must_use]
     pub fn get(&self) -> f32 {
         self.0
@@ -99,61 +139,17 @@ impl From<f32> for Entropy {
     }
 }
 
-#[derive(Deref, Copy, Debug, Clone, Default)]
-#[repr(transparent)]
-pub struct ContextMergeCost(f32);
-
-impl ContextMergeCost {
-    pub const ZERO: ContextMergeCost = ContextMergeCost(0.0);
-    const EQ_THRESHOLD: ContextMergeCost = ContextMergeCost(1e-6);
-
-    #[must_use]
-    pub fn new(value: f32) -> Self {
-        assert!(value.is_finite());
-
-        Self(value)
-    }
-}
-
-impl Display for ContextMergeCost {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl From<f32> for ContextMergeCost {
-    fn from(value: f32) -> Self {
-        Self::new(value)
-    }
-}
-
-impl PartialEq for ContextMergeCost {
-    fn eq(&self, other: &Self) -> bool {
-        (**self - **other).abs() <= *ContextMergeCost::EQ_THRESHOLD
-    }
-}
-
-impl Eq for ContextMergeCost {}
-
-impl PartialOrd for ContextMergeCost {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
-    }
-}
-
-impl Ord for ContextMergeCost {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.0.total_cmp(&other.0)
-    }
-}
-
 /// A statistical model for a single local situation ("context").
 ///
 /// Contains the probabilities of each symbol, and the probability of
 /// encountering this specific context as well.
 #[derive(Debug, Clone)]
 pub struct Context {
+    /// The probability of encountering this specific context in a file. Useful
+    /// for context binning and not used at all during compressing/decompressing
+    /// data.
     pub context_prob: Probability,
+    /// The probability of encountering each symbol after given context.
     pub symbol_prob: Vec<Probability>,
 
     entropy: Entropy,
@@ -259,6 +255,15 @@ impl Context {
         Self::new(context_prob, symbol_prob)
     }
 
+    /// Returns the entropy of this context.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    ///
+    /// let context = Context::new_from(1.0, [0.25, 0.25, 0.25, 0.25]);
+    /// assert_eq!(context.entropy().get(), 2.0);
+    /// ```
     #[must_use]
     pub fn entropy(&self) -> Entropy {
         self.entropy
@@ -366,82 +371,65 @@ impl PartialEq for Context {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum ContextNode {
-    Leaf {
-        specs: Vec<ContextSpec>,
-        context: Context,
-    },
-    Node {
-        context: Context,
-        merge_cost: ContextMergeCost,
-        left_child: usize,
-        right_child: usize,
-    },
+/// The cost of merging two [`Context`]s together, as a float.
+#[derive(Deref, Copy, Debug, Clone, Default)]
+#[repr(transparent)]
+pub struct ContextMergeCost(f32);
+
+impl ContextMergeCost {
+    /// `ContextMergeCost` with a value of `0.0`.
+    pub const ZERO: ContextMergeCost = ContextMergeCost(0.0);
+    const EQ_THRESHOLD: ContextMergeCost = ContextMergeCost(1e-6);
+
+    /// Creates a new `ContextMergeCost` object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::ContextMergeCost;
+    ///
+    /// let cost = ContextMergeCost::new(0.5);
+    /// assert_eq!(*cost, 0.5);
+    /// ```
+    ///
+    /// # Panics
+    /// This function panics if the is not finite.
+    #[must_use]
+    pub fn new(value: f32) -> Self {
+        assert!(value.is_finite());
+
+        Self(value)
+    }
 }
 
-impl ContextNode {
-    #[must_use]
-    pub(crate) fn new_from_merge(
-        left: &Context,
-        right: &Context,
-        left_index: usize,
-        right_index: usize,
-    ) -> Self {
-        let context = left.merge_with(right);
-        let merge_cost = Context::merge_cost(&context, left, right);
-
-        Self::new_node(context, merge_cost, left_index, right_index)
+impl Display for ContextMergeCost {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
+}
 
-    #[must_use]
-    pub(crate) fn new_leaf(spec: ContextSpec, context: Context) -> Self {
-        Self::Leaf {
-            specs: vec![spec],
-            context,
-        }
+impl From<f32> for ContextMergeCost {
+    fn from(value: f32) -> Self {
+        Self::new(value)
     }
+}
 
-    #[must_use]
-    pub(crate) fn new_leaf_multi<T>(specs: T, context: Context) -> Self
-    where
-        T: Into<Vec<ContextSpec>>,
-    {
-        Self::Leaf {
-            specs: specs.into(),
-            context,
-        }
+impl PartialEq for ContextMergeCost {
+    fn eq(&self, other: &Self) -> bool {
+        (**self - **other).abs() <= *ContextMergeCost::EQ_THRESHOLD
     }
+}
 
-    #[must_use]
-    pub(crate) fn new_node(
-        context: Context,
-        merge_cost: ContextMergeCost,
-        left_child: usize,
-        right_child: usize,
-    ) -> Self {
-        Self::Node {
-            context,
-            merge_cost,
-            left_child,
-            right_child,
-        }
+impl Eq for ContextMergeCost {}
+
+impl PartialOrd for ContextMergeCost {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.0.partial_cmp(&other.0)
     }
+}
 
-    #[must_use]
-    pub fn context(&self) -> &Context {
-        match self {
-            ContextNode::Leaf { context, .. } => context,
-            ContextNode::Node { context, .. } => context,
-        }
-    }
-
-    #[must_use]
-    pub fn merge_cost(&self) -> ContextMergeCost {
-        match self {
-            ContextNode::Leaf { .. } => ContextMergeCost::ZERO,
-            ContextNode::Node { merge_cost, .. } => *merge_cost,
-        }
+impl Ord for ContextMergeCost {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.0.total_cmp(&other.0)
     }
 }
 

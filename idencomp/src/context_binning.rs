@@ -8,7 +8,7 @@ use rayon::prelude::{
     ParallelSliceMut,
 };
 
-use crate::context::{Context, ContextMergeCost, ContextNode};
+use crate::context::{Context, ContextMergeCost};
 use crate::context_spec::ContextSpec;
 use crate::model::Model;
 use crate::progress::{DummyProgressNotifier, ProgressNotifier};
@@ -416,13 +416,92 @@ impl ContextTree {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ContextNode {
+    Leaf {
+        specs: Vec<ContextSpec>,
+        context: Context,
+    },
+    Node {
+        context: Context,
+        merge_cost: ContextMergeCost,
+        left_child: usize,
+        right_child: usize,
+    },
+}
+
+impl ContextNode {
+    #[must_use]
+    pub(crate) fn new_from_merge(
+        left: &Context,
+        right: &Context,
+        left_index: usize,
+        right_index: usize,
+    ) -> Self {
+        let context = left.merge_with(right);
+        let merge_cost = Context::merge_cost(&context, left, right);
+
+        Self::new_node(context, merge_cost, left_index, right_index)
+    }
+
+    #[must_use]
+    pub(crate) fn new_leaf(spec: ContextSpec, context: Context) -> Self {
+        Self::Leaf {
+            specs: vec![spec],
+            context,
+        }
+    }
+
+    #[must_use]
+    pub(crate) fn new_leaf_multi<T>(specs: T, context: Context) -> Self
+    where
+        T: Into<Vec<ContextSpec>>,
+    {
+        Self::Leaf {
+            specs: specs.into(),
+            context,
+        }
+    }
+
+    #[must_use]
+    pub(crate) fn new_node(
+        context: Context,
+        merge_cost: ContextMergeCost,
+        left_child: usize,
+        right_child: usize,
+    ) -> Self {
+        Self::Node {
+            context,
+            merge_cost,
+            left_child,
+            right_child,
+        }
+    }
+
+    #[must_use]
+    pub fn context(&self) -> &Context {
+        match self {
+            ContextNode::Leaf { context, .. } => context,
+            ContextNode::Node { context, .. } => context,
+        }
+    }
+
+    #[must_use]
+    pub fn merge_cost(&self) -> ContextMergeCost {
+        match self {
+            ContextNode::Leaf { .. } => ContextMergeCost::ZERO,
+            ContextNode::Node { merge_cost, .. } => *merge_cost,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::_internal_test_data::RANDOM_200_CTX_Q_SCORE_MODEL;
-    use crate::context::{Context, ContextMergeCost, ContextNode};
+    use crate::context::Context;
     use crate::context_binning::{
         bin_contexts_with_keys, bin_contexts_with_model, ComplexContext, ContextBinningOptions,
-        ContextTree,
+        ContextMergeCost, ContextNode, ContextTree,
     };
     use crate::context_spec::{ContextSpec, ContextSpecType};
     use crate::model::{Model, ModelType};

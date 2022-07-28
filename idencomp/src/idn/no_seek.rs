@@ -33,6 +33,19 @@ impl<T> NoSeek<T> {
         Self { inner, position: 0 }
     }
 
+    /// Returns the position of this [`NoSeek<T>`] object.
+    ///
+    /// # Examples
+    /// ```
+    /// use std::io::{Seek, SeekFrom};
+    ///
+    /// use idencomp::idn::no_seek::NoSeek;
+    ///
+    /// let data: Vec<u8> = Vec::new();
+    /// let mut reader = NoSeek::new(&data);
+    ///
+    /// assert_eq!(reader.position(), 0);
+    /// ```
     pub fn position(&self) -> u64 {
         self.position
     }

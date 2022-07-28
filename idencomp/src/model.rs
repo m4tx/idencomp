@@ -20,6 +20,7 @@ use crate::sequence::{Acid, Symbol};
 pub struct CompressionRate(f32);
 
 impl CompressionRate {
+    /// `CompressionRate` with a value of `0.0`.
     pub const ZERO: CompressionRate = CompressionRate(0.0);
 
     const EQ_THRESHOLD: CompressionRate = CompressionRate(1e-6);
@@ -44,6 +45,15 @@ impl CompressionRate {
         Self(value)
     }
 
+    /// Value of this `CompressionRate` object, as a float.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::CompressionRate;
+    ///
+    /// let rate = CompressionRate::new(3.45);
+    /// assert_eq!(rate.get(), 3.45);
+    /// ```
     #[must_use]
     pub const fn get(&self) -> f32 {
         self.0
@@ -94,11 +104,28 @@ impl ModelType {
     }
 }
 
+/// An automatically-generated identifier of a model.
+///
+/// The model identifier is an SHA-3 256-bit checksum of the entire model
+/// contents. The identifier generation process starts with serialized by
+/// storing the model type, context specifier type, model map sorted by keys
+/// ascending, and then the contexts themselves. Then, the hash of such a blob
+/// is calculated.
 #[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 #[repr(transparent)]
 pub struct ModelIdentifier([u8; 32]);
 
 impl ModelIdentifier {
+    /// Creates a new instance of `ModelIdentifier`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::ModelIdentifier;
+    ///
+    /// let identifier = ModelIdentifier::new([1; 32]);
+    /// assert_eq!(identifier.to_string(), "01010101");
+    /// ```
+    #[must_use]
     pub fn new(value: [u8; 32]) -> Self {
         Self(value)
     }
@@ -225,12 +252,31 @@ impl Model {
         )
     }
 
+    /// Returns the number of contexts in this [`Model`] instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let model = Model::empty(ModelType::Acids);
+    /// assert_eq!(model.len(), 0);
+    /// ```
     #[inline]
     #[must_use]
     pub fn len(&self) -> usize {
         self.contexts.len()
     }
 
+    /// Returns `true` if this [`Model`] instance does not contain any contexts;
+    /// `false` otherwise.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let model = Model::empty(ModelType::Acids);
+    /// assert_eq!(model.is_empty(), true);
+    /// ```
     #[inline]
     #[must_use]
     pub fn is_empty(&self) -> bool {
@@ -243,12 +289,31 @@ impl Model {
         &self.identifier
     }
 
+    /// Returns the model type of this [`Model`] instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let model = Model::empty(ModelType::Acids);
+    /// assert_eq!(model.model_type(), ModelType::Acids);
+    /// ```
     #[inline]
     #[must_use]
     pub fn model_type(&self) -> ModelType {
         self.model_type
     }
 
+    /// Returns the context specifier type of this [`Model`] instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context_spec::ContextSpecType;
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let model = Model::empty(ModelType::Acids);
+    /// assert_eq!(model.context_spec_type(), ContextSpecType::Dummy);
+    /// ```
     #[inline]
     #[must_use]
     pub fn context_spec_type(&self) -> ContextSpecType {

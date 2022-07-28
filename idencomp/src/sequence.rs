@@ -8,12 +8,45 @@ use serde::{Deserialize, Serialize};
 use crate::fastq::{FastqQualityScore, FASTQ_QUALITY_SCORE_CHARS};
 use crate::progress::ByteNum;
 
+/// A single symbol that is possible to be compressed.
 pub trait Symbol: PartialEq + Eq + Hash + Copy {
+    /// The total number of distinct symbols.
     const SIZE: usize;
 
+    /// Converts a `Symbol` instance to a number (index).
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::sequence::{Acid, Symbol};
+    ///
+    /// // Acid implements Symbol
+    /// assert_eq!(Acid::A.to_usize(), 1);
+    /// ```
     fn to_usize(&self) -> usize;
+
+    /// Converts a number (symbol index) to a `Symbol` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::sequence::{Acid, Symbol};
+    ///
+    /// // Acid implements Symbol
+    /// assert_eq!(Acid::from_usize(1), Acid::A);
+    /// ```
     fn from_usize(value: usize) -> Self;
 
+    /// Returns all possible values of a given `Symbol` type.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::sequence::{Acid, Symbol};
+    ///
+    /// // Acid implements Symbol
+    /// assert_eq!(
+    ///     Acid::values(),
+    ///     vec![Acid::N, Acid::A, Acid::C, Acid::T, Acid::G]
+    /// );
+    /// ```
     fn values() -> Vec<Self> {
         (0..Self::SIZE)
             .into_iter()
@@ -30,12 +63,29 @@ impl NucleotideSequenceIdentifier {
     /// Empty identifier.
     pub const EMPTY: NucleotideSequenceIdentifier = NucleotideSequenceIdentifier(String::new());
 
+    /// Returns the length of this identifier, in bytes.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::sequence::NucleotideSequenceIdentifier;
+    ///
+    /// assert_eq!(NucleotideSequenceIdentifier::EMPTY.len(), 0);
+    /// ```
     #[inline]
     #[must_use]
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// Returns if this identfier is empty (has length of zero bytes).
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::sequence::NucleotideSequenceIdentifier;
+    ///
+    /// assert_eq!(NucleotideSequenceIdentifier::EMPTY.is_empty(), true);
+    /// assert_eq!(NucleotideSequenceIdentifier::from("test").is_empty(), false);
+    /// ```
     #[inline]
     #[must_use]
     pub fn is_empty(&self) -> bool {
@@ -43,6 +93,13 @@ impl NucleotideSequenceIdentifier {
     }
 
     /// Returns this identifier as string.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::sequence::NucleotideSequenceIdentifier;
+    ///
+    /// assert_eq!(NucleotideSequenceIdentifier::from("test").str(), "test");
+    /// ```
     #[inline]
     #[must_use]
     pub fn str(&self) -> &str {
@@ -355,6 +412,7 @@ impl Display for Acid {
 pub struct QualityScore<const Q_END: usize>(u8);
 
 impl<const Q_END: usize> QualityScore<Q_END> {
+    /// `QualityScore` instance with a value of `0`.
     pub const ZERO: QualityScore<Q_END> = Self(0);
 
     /// Constructs a new QualityScore instance.
