@@ -179,7 +179,6 @@ pub(crate) trait ClusterCostCalculator<Value, Centroid> {
 
 #[cfg(test)]
 mod tests {
-
     use crate::clustering::{Cluster, ClusterCostCalculator, Clustering};
 
     #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]

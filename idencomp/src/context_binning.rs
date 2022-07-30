@@ -416,16 +416,25 @@ impl ContextTree {
     }
 }
 
+/// A binary tree node used in [`ContextTree`].
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ContextNode {
+    /// Leaf node.
     Leaf {
+        /// List of context specifiers this node is made from.
         specs: Vec<ContextSpec>,
+        /// The context for this node's specifiers.
         context: Context,
     },
+    /// Inner node, containing exactly two children.
     Node {
+        /// The context made from merging the contexts from both children.
         context: Context,
+        /// The cost of merging the contexts from both children.
         merge_cost: ContextMergeCost,
+        /// The index of the left child.
         left_child: usize,
+        /// The index of the right child.
         right_child: usize,
     },
 }

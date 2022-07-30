@@ -37,8 +37,18 @@ impl ModelProvider {
         provider
     }
 
+    /// Creates a new `ModelProvider` instance containing an empty acid model
+    /// and an empty quality score model.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::model_provider::ModelProvider;
+    ///
+    /// let provider = ModelProvider::with_empty_models();
+    /// assert_eq!(provider.len(), 2);
+    /// ```
     #[must_use]
-    pub fn empty() -> Self {
+    pub fn with_empty_models() -> Self {
         Self::new(vec![
             Model::empty(ModelType::Acids),
             Model::empty(ModelType::QualityScores),
@@ -178,7 +188,7 @@ impl ModelProvider {
 
 impl Default for ModelProvider {
     fn default() -> Self {
-        Self::empty()
+        Self::with_empty_models()
     }
 }
 

@@ -283,6 +283,18 @@ impl Model {
         self.contexts.is_empty()
     }
 
+    /// Returns the identifier of this model.
+    ///
+    /// See the [`ModelIdentifier`] docs for more information on how the
+    /// identifier is generated.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let model = Model::empty(ModelType::Acids);
+    /// assert_eq!(model.identifier().to_string(), "85989ce9");
+    /// ```
     #[inline]
     #[must_use]
     pub fn identifier(&self) -> &ModelIdentifier {
