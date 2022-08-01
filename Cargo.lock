@@ -103,7 +103,7 @@ dependencies = [
  "bitflags",
  "cexpr",
  "clang-sys",
- "clap 3.2.15",
+ "clap 3.2.16",
  "env_logger",
  "lazy_static",
  "lazycell",
@@ -266,9 +266,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "3.2.15"
+version = "3.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44bbe24bbd31a185bc2c4f7c2abe80bea13a20d57ee4e55be70ac512bdc76417"
+checksum = "a3dbbb6653e7c55cc8595ad3e1f7be8f32aba4eb7ff7f0fd1163d4f3d137c0a9"
 dependencies = [
  "atty",
  "bitflags",
@@ -287,7 +287,7 @@ version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0636f9c040082f8e161555a305f8cec1a1c2828b3d981c812b8c39f4ac00c42c"
 dependencies = [
- "clap 3.2.15",
+ "clap 3.2.16",
  "log",
 ]
 
@@ -650,7 +650,7 @@ dependencies = [
  "anyhow",
  "atty",
  "chrono",
- "clap 3.2.15",
+ "clap 3.2.16",
  "clap-verbosity-flag",
  "csv",
  "derive_more",
