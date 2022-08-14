@@ -21,38 +21,48 @@ use crate::idn::thread_pool::ThreadPool;
 use crate::model::{ModelIdentifier, ModelType};
 use crate::progress::{ByteNum, DummyProgressNotifier, ProgressNotifier};
 
+/// Error occurring during decompression of an IDN file.
 #[derive(Debug, Default)]
 pub enum IdnDecompressorError {
+    /// Invalid decompressor state.
     #[default]
     InvalidState,
+    /// I/O error occurred when reading the IDN file.
     IoError(std::io::Error),
+    /// Error decoding UTF-8 string data.
     Utf8Error(FromUtf8Error),
+    /// File structure invalid.
     SerializeError(binrw::Error),
+    /// Unknown IDN file format version.
     InvalidVersion(u8),
+    /// The calculated and saved block content checksums are not equal.
     BlockChecksumMismatch(u32, u32),
+    /// The model index requested in a switch is greater than the total number of models.
     InvalidModelIndex(u8, u8),
+    /// Sequence slice occurred without prior acid/quality score "switch model" slice.
     NoActiveModel(ModelType),
+    /// Unknown model identifier occurred in the file metadata.
     UnknownModel(ModelIdentifier),
 }
 
 impl IdnDecompressorError {
     #[must_use]
-    pub fn block_checksum_mismatch(actual: u32, expected: u32) -> Self {
+    pub(super) fn block_checksum_mismatch(actual: u32, expected: u32) -> Self {
         Self::BlockChecksumMismatch(actual, expected)
     }
 
     #[must_use]
-    pub fn invalid_model_index(index: u8, num_models: u8) -> Self {
+    pub(super) fn invalid_model_index(index: u8, num_models: u8) -> Self {
         Self::InvalidModelIndex(index, num_models)
     }
 
     #[must_use]
-    pub fn no_active_model(model_type: ModelType) -> Self {
+    pub(super) fn no_active_model(model_type: ModelType) -> Self {
         Self::NoActiveModel(model_type)
     }
 
     #[must_use]
-    pub fn unknown_model(model_identifier: ModelIdentifier) -> Self {
+    pub(super) fn unknown_model(model_identifier: ModelIdentifier) -> Self {
         Self::UnknownModel(model_identifier)
     }
 }
@@ -118,6 +128,7 @@ impl Error for IdnDecompressorError {
     }
 }
 
+/// The result of decompressing IDN.
 pub type IdnDecompressResult<T> = Result<T, IdnDecompressorError>;
 
 #[derive(Debug, Clone)]

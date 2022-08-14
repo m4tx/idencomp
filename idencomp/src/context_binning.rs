@@ -329,6 +329,7 @@ impl<'a> Ord for IndexedContextNode<'a> {
     }
 }
 
+/// A binary tree of [`ContextNode`]s.
 #[derive(Debug, Clone)]
 pub struct ContextTree {
     vec: Vec<ContextNode>,
@@ -336,7 +337,7 @@ pub struct ContextTree {
 
 impl ContextTree {
     #[must_use]
-    pub fn new<T: Into<Vec<ContextNode>>>(vec: T) -> Self {
+    pub(crate) fn new<T: Into<Vec<ContextNode>>>(vec: T) -> Self {
         let vec = vec.into();
         assert!(!vec.is_empty());
 

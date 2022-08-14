@@ -3,7 +3,7 @@ use std::io::{Seek, Write};
 use log::debug;
 
 use crate::fastq::FastqSequence;
-use crate::idn::compressor::{IdnCompressorOptions, IdnWriteResult};
+use crate::idn::compressor::{IdnCompressorOptions, IdnCompressResult};
 use crate::idn::model_chooser::ModelChooser;
 use crate::idn::writer_idn::IdnWriter;
 use crate::model::ModelIdentifier;
@@ -30,7 +30,7 @@ impl<'a, W: Write + Seek> CompressorInitializer<'a, W> {
         }
     }
 
-    pub fn initialize(mut self) -> IdnWriteResult<()> {
+    pub fn initialize(mut self) -> IdnCompressResult<()> {
         self.writer.write_header(1)?;
         self.retain_best_models();
         self.write_metadata()?;
@@ -38,7 +38,7 @@ impl<'a, W: Write + Seek> CompressorInitializer<'a, W> {
         Ok(())
     }
 
-    fn write_metadata(&mut self) -> IdnWriteResult<()> {
+    fn write_metadata(&mut self) -> IdnCompressResult<()> {
         self.add_models_metadata();
         self.writer.write_metadata()?;
 

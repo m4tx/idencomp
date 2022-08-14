@@ -9,7 +9,7 @@ use log::debug;
 use crate::fastq::FastqSequence;
 use crate::idn::compressor::{
     CompressionQuality, CompressionStats, IdnCompressorOptions, IdnCompressorOutState,
-    IdnWriteResult,
+    IdnCompressResult,
 };
 use crate::idn::data::IdnIdentifierCompression;
 use crate::idn::model_chooser::ModelChooser;
@@ -73,14 +73,14 @@ impl<W: Write> IdnBlockCompressor<W> {
         }
     }
 
-    pub fn process(mut self) -> IdnWriteResult<()> {
+    pub fn process(mut self) -> IdnCompressResult<()> {
         self.prepare_to_write()?;
         self.write()?;
 
         Ok(())
     }
 
-    fn prepare_to_write(&mut self) -> IdnWriteResult<()> {
+    fn prepare_to_write(&mut self) -> IdnCompressResult<()> {
         if self.sequences.is_empty() {
             return Ok(());
         }
@@ -119,7 +119,7 @@ impl<W: Write> IdnBlockCompressor<W> {
         Ok(())
     }
 
-    fn write(self) -> IdnWriteResult<()> {
+    fn write(self) -> IdnCompressResult<()> {
         let _guard = self.out_state.block_lock().lock(self.block_index);
         let mut writer_guard = self.out_state.writer();
         let mut w = writer_guard.writer_for_block();
@@ -148,7 +148,7 @@ impl<W: Write> IdnBlockCompressor<W> {
         &mut self,
         sequences: &[FastqSequence],
         options: &IdnCompressorOptions,
-    ) -> IdnWriteResult<()> {
+    ) -> IdnCompressResult<()> {
         if options.quality >= Self::BROTLI_THRESHOLD {
             let data = Self::compress_identifiers_brotli(sequences)?;
             self.out_identifier_bytes += data.len();
@@ -162,7 +162,7 @@ impl<W: Write> IdnBlockCompressor<W> {
         }
     }
 
-    fn compress_identifiers_brotli(sequences: &[FastqSequence]) -> IdnWriteResult<Vec<u8>> {
+    fn compress_identifiers_brotli(sequences: &[FastqSequence]) -> IdnCompressResult<Vec<u8>> {
         let identifiers = Self::identifiers_as_lines(sequences);
 
         let mut data = Vec::new();
@@ -180,7 +180,7 @@ impl<W: Write> IdnBlockCompressor<W> {
         Ok(data)
     }
 
-    fn compress_identifiers_deflate(sequences: &[FastqSequence]) -> IdnWriteResult<Vec<u8>> {
+    fn compress_identifiers_deflate(sequences: &[FastqSequence]) -> IdnCompressResult<Vec<u8>> {
         let identifiers = Self::identifiers_as_lines(sequences);
 
         let mut encoder = DeflateEncoder::new(Vec::new(), flate2::Compression::default());
@@ -211,7 +211,7 @@ impl<W: Write> IdnBlockCompressor<W> {
         acid_model: &AcidRansEncModel,
         q_score_model: &QScoreRansEncModel,
         options: &IdnCompressorOptions,
-    ) -> IdnWriteResult<()> {
+    ) -> IdnCompressResult<()> {
         let seq_len = sequence.len();
         let seq_identifier = sequence.identifier().clone();
         let data = self
@@ -233,7 +233,7 @@ impl<W: Write> IdnBlockCompressor<W> {
         &mut self,
         sequence: &FastqSequence,
         options: &'a IdnCompressorOptions,
-    ) -> IdnWriteResult<&'a AcidRansEncModel> {
+    ) -> IdnCompressResult<&'a AcidRansEncModel> {
         let current_identifier = self
             .current_acid_model
             .map(|index| self.options.model_provider[index as usize].identifier());
@@ -258,7 +258,7 @@ impl<W: Write> IdnBlockCompressor<W> {
         &mut self,
         sequence: &FastqSequence,
         options: &'a IdnCompressorOptions,
-    ) -> IdnWriteResult<&'a QScoreRansEncModel> {
+    ) -> IdnCompressResult<&'a QScoreRansEncModel> {
         let current_identifier = self
             .current_q_score_model
             .map(|index| self.options.model_provider[index as usize].identifier());

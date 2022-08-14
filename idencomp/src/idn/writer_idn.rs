@@ -3,7 +3,7 @@ use std::io::{Seek, Write};
 use binrw::BinWrite;
 use itertools::Itertools;
 
-use crate::idn::compressor::IdnWriteResult;
+use crate::idn::compressor::IdnCompressResult;
 use crate::idn::data::{IdnHeader, IdnMetadataHeader, IdnMetadataItem, IdnModelsMetadata};
 use crate::model::ModelIdentifier;
 
@@ -22,7 +22,7 @@ impl<W: Write + Seek> IdnWriter<W> {
         }
     }
 
-    pub fn write_header(&mut self, version: u8) -> IdnWriteResult<()> {
+    pub fn write_header(&mut self, version: u8) -> IdnCompressResult<()> {
         let header = IdnHeader { version };
         header.write_to(&mut self.writer)?;
         Ok(())
@@ -41,7 +41,7 @@ impl<W: Write + Seek> IdnWriter<W> {
             .push(item);
     }
 
-    pub fn write_metadata(&mut self) -> IdnWriteResult<()> {
+    pub fn write_metadata(&mut self) -> IdnCompressResult<()> {
         let metadata_items = self
             .metadata_items
             .take()

@@ -417,6 +417,13 @@ impl<const Q_END: usize> QualityScore<Q_END> {
 
     /// Constructs a new QualityScore instance.
     ///
+    /// ## Examples
+    /// ```
+    /// use idencomp::sequence::QualityScore;
+    ///
+    /// assert_eq!(QualityScore::<5>::new(3).get(), 3);
+    /// ```
+    ///
     /// # Panics
     /// This function panics if `value` > `Q_END`.
     #[must_use]
@@ -427,6 +434,13 @@ impl<const Q_END: usize> QualityScore<Q_END> {
     }
 
     /// Return the integer value of this `QualityScore` instance.
+    ///
+    /// ## Examples
+    /// ```
+    /// use idencomp::sequence::QualityScore;
+    ///
+    /// assert_eq!(QualityScore::<5>::new(3).get(), 3);
+    /// ```
     #[must_use]
     pub fn get(&self) -> usize {
         self.0 as usize
@@ -434,6 +448,14 @@ impl<const Q_END: usize> QualityScore<Q_END> {
 }
 
 impl FastqQualityScore {
+    /// Returns this quality score as a FASTQ character.
+    ///
+    /// ## Examples
+    /// ```
+    /// use idencomp::fastq::FastqQualityScore;
+    ///
+    /// assert_eq!(FastqQualityScore::new(0).as_fastq_char(), '!');
+    /// ```
     #[must_use]
     pub fn as_fastq_char(&self) -> char {
         FASTQ_QUALITY_SCORE_CHARS

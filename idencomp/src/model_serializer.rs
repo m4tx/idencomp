@@ -61,6 +61,7 @@ impl From<SerializableComplexContext> for ComplexContext {
     }
 }
 
+/// An intermediate structure that can be converted to and from [`Model`], and additionally can be serialized and deserialized.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SerializableModel {
     identifier: ModelIdentifier,

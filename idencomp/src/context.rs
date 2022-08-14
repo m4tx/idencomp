@@ -209,6 +209,16 @@ impl Context {
         )
     }
 
+    /// Creates a new "dummy" context that have the same probability of all symbols.
+    ///
+    /// ## Examples
+    /// ```
+    /// use idencomp::context::Context;
+    ///
+    /// let ctx = Context::dummy(4);
+    /// let expected = Context::new_from(1.0, [0.25, 0.25, 0.25, 0.25]);
+    /// assert_eq!(ctx, expected);
+    /// ```
     #[inline]
     #[must_use]
     pub fn dummy(num_symbols: usize) -> Self {
@@ -231,6 +241,17 @@ impl Context {
         self.symbol_prob.len()
     }
 
+    /// Merge this context with another instance.
+    ///
+    /// ## Examples
+    /// ```
+    /// use idencomp::context::Context;
+    ///
+    /// let ctx_1 = Context::new_from(0.25, [1.0, 0.0, 0.0, 1.0]);
+    /// let ctx_2 = Context::new_from(0.75, [0.0, 0.6666667, 1.0, 1.0]);
+    /// let expected_ctx = Context::new_from(1.0, [0.25, 0.5, 0.75, 1.0]);
+    /// assert_eq!(ctx_1.merge_with(&ctx_2), expected_ctx);
+    /// ```
     #[must_use]
     pub fn merge_with(&self, other: &Self) -> Self {
         assert_eq!(self.symbol_num(), other.symbol_num());

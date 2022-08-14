@@ -8,8 +8,10 @@ use crate::fastq::{
 };
 use crate::sequence::Acid;
 
+/// Error occurring during serializing a FASTQ file.
 #[derive(Debug)]
 pub enum FastqWriterError {
+    /// I/O error occurred when writing the FASTQ file.
     IoError(std::io::Error),
 }
 
@@ -55,12 +57,14 @@ impl Default for FastqWriterParams {
     }
 }
 
+/// A builder for [`FastqWriterParams`].
 #[derive(Debug, Clone)]
 pub struct FastqWriterParamsBuilder {
     output_title_with_separator: bool,
 }
 
 impl FastqWriterParamsBuilder {
+    /// Returns a new `FastqWriterParamsBuilder` instance.
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -68,6 +72,7 @@ impl FastqWriterParamsBuilder {
         }
     }
 
+    /// Whether the FASTQ writer shouin along
     pub fn output_title_with_separator(&mut self, output_title_with_separator: bool) -> &mut Self {
         let mut new = self;
         new.output_title_with_separator = output_title_with_separator;

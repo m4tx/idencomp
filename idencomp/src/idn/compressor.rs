@@ -18,17 +18,22 @@ use crate::idn::thread_pool::ThreadPool;
 use crate::idn::writer_idn::IdnWriter;
 use crate::progress::{ByteNum, DummyProgressNotifier, ProgressNotifier};
 
+/// Error occurring during compression of an IDN file.
 #[derive(Debug, Default)]
 pub enum IdnCompressorError {
+    /// Invalid compressor state.
     #[default]
     InvalidState,
+    /// I/O error occurred when writing the IDN file.
     IoError(std::io::Error),
+    /// Error occurred trying to serialize the headers and metadata.
     SerializeError(binrw::Error),
+    /// Requested to compress a sequence longer than the configured limit.
     SequenceTooLong(usize, usize),
 }
 
 impl IdnCompressorError {
-    pub fn sequence_too_long(sequence_len: usize, max_len: usize) -> Self {
+    pub(super) fn sequence_too_long(sequence_len: usize, max_len: usize) -> Self {
         Self::SequenceTooLong(sequence_len, max_len)
     }
 }
@@ -70,7 +75,8 @@ impl Error for IdnCompressorError {
     }
 }
 
-pub type IdnWriteResult<T> = Result<T, IdnCompressorError>;
+/// The result of compressing IDN.
+pub type IdnCompressResult<T> = Result<T, IdnCompressorError>;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct CompressionQuality(u8);
@@ -285,7 +291,7 @@ impl<W: Write + Send> IdnCompressorInner<W> {
         }
     }
 
-    fn initialize(&mut self, first_block: &SequenceBlock) -> IdnWriteResult<()> {
+    fn initialize(&mut self, first_block: &SequenceBlock) -> IdnCompressResult<()> {
         let mut writer = self.state.writer();
         let options = Arc::get_mut(&mut self.options).unwrap();
         let initializer = CompressorInitializer::new(&mut writer, options, first_block);
@@ -295,7 +301,7 @@ impl<W: Write + Send> IdnCompressorInner<W> {
         Ok(())
     }
 
-    fn write_all_blocks(&mut self) -> IdnWriteResult<()> {
+    fn write_all_blocks(&mut self) -> IdnCompressResult<()> {
         loop {
             let blocks = self.data_queue.retrieve_all();
             if blocks.is_empty() {
@@ -308,7 +314,7 @@ impl<W: Write + Send> IdnCompressorInner<W> {
         }
     }
 
-    fn write_current_blocks(&mut self) -> IdnWriteResult<()> {
+    fn write_current_blocks(&mut self) -> IdnCompressResult<()> {
         let blocks = self.data_queue.retrieve_all();
 
         for block in blocks {
@@ -318,7 +324,7 @@ impl<W: Write + Send> IdnCompressorInner<W> {
         Ok(())
     }
 
-    fn write_block(&mut self, block: SequenceBlock) -> IdnWriteResult<()> {
+    fn write_block(&mut self, block: SequenceBlock) -> IdnCompressResult<()> {
         if !self.initialized {
             self.initialize(&block)?;
         }
@@ -404,10 +410,10 @@ impl<W: Write + Send> IdnCompressor<W> {
         }
     }
 
-    pub fn add_sequence(&mut self, sequence: FastqSequence) -> IdnWriteResult<()> {
+    pub fn add_sequence(&mut self, sequence: FastqSequence) -> IdnCompressResult<()> {
         let seq_len = sequence.len();
         if seq_len > self.max_seq_len() {
-            return Err(IdnCompressorError::SequenceTooLong(
+            return Err(IdnCompressorError::sequence_too_long(
                 seq_len,
                 self.max_seq_len(),
             ));
@@ -433,7 +439,7 @@ impl<W: Write + Send> IdnCompressor<W> {
         self.max_block_total_len / 2
     }
 
-    fn make_block(&mut self) -> IdnWriteResult<()> {
+    fn make_block(&mut self) -> IdnCompressResult<()> {
         self.thread_pool.get_status()?;
 
         let block = mem::take(&mut self.block);
@@ -448,7 +454,7 @@ impl<W: Write + Send> IdnCompressor<W> {
         Ok(())
     }
 
-    pub fn finish(mut self) -> IdnWriteResult<()> {
+    pub fn finish(mut self) -> IdnCompressResult<()> {
         if !self.block.is_empty() {
             self.make_block()?;
         }

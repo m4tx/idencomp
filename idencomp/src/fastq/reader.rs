@@ -11,13 +11,20 @@ use crate::fastq::{
 use crate::progress::ByteNum;
 use crate::sequence::Acid;
 
+/// Error occurring during parsing a FASTQ file.
 #[derive(Debug)]
 pub enum FastqReaderError {
+    /// I/O error occurred when reading the FASTQ file.
     IoError(std::io::Error),
+    /// End-Of-File reached in the middle of reading the file.
     EofReached,
+    /// Not a valid FASTQ file.
     InvalidFormat,
+    /// Invalid acid character.
     InvalidAcid(char),
+    /// Invalid quality score character.
     InvalidQualityScore(char),
+    /// The length of acids and quality scores is not equal.
     AcidAndQualityScoreLengthMismatch,
 }
 
@@ -53,25 +60,30 @@ impl Error for FastqReaderError {
     }
 }
 
+/// The result of a FASTQ reading operation.
 pub type FastqResult<T> = Result<T, FastqReaderError>;
 
+/// A builder for `FastqReaderParams`.
 #[derive(Debug, Clone)]
 pub struct FastqReaderParamsBuilder {
     delimiter: u8,
 }
 
 impl FastqReaderParamsBuilder {
+    /// Returns a new instance of `FastqReaderParamsBuilder`.
     #[must_use]
     pub fn new() -> Self {
         Self { delimiter: b'\n' }
     }
 
+    /// Sets the delimiter character to use instead of a newline.
     pub fn delimiter(&mut self, delimiter: u8) -> &mut Self {
         let mut new = self;
         new.delimiter = delimiter;
         new
     }
 
+    /// Builds and returns [`FastqReaderParams`].
     pub fn build(&self) -> FastqReaderParams {
         FastqReaderParams {
             delimiter: self.delimiter,
@@ -85,12 +97,14 @@ impl Default for FastqReaderParamsBuilder {
     }
 }
 
+/// FASTQ reading params.
 #[derive(Debug, Clone)]
 pub struct FastqReaderParams {
     delimiter: u8,
 }
 
 impl FastqReaderParams {
+    /// Returns new builder for `FastqReaderParams`.
     #[must_use]
     pub fn builder() -> FastqReaderParamsBuilder {
         FastqReaderParamsBuilder::new()

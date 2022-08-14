@@ -4,7 +4,7 @@ use std::io::{Cursor, Seek, Write};
 use binrw::BinWrite;
 
 use crate::fastq::FastqSequence;
-use crate::idn::compressor::IdnWriteResult;
+use crate::idn::compressor::IdnCompressResult;
 use crate::idn::data::{
     IdnBlockHeader, IdnIdentifierCompression, IdnIdentifiersHeader, IdnSequenceHeader,
     IdnSliceHeader, IdnSwitchModelHeader,
@@ -24,7 +24,7 @@ impl BlockWriter {
         }
     }
 
-    pub fn write_to<W: Write + Seek>(self, mut writer: W) -> IdnWriteResult<()> {
+    pub fn write_to<W: Write + Seek>(self, mut writer: W) -> IdnCompressResult<()> {
         let data = self.data.into_inner();
         let checksum = self.hasher.finalize();
 
@@ -43,7 +43,7 @@ impl BlockWriter {
         &mut self,
         compression_method: IdnIdentifierCompression,
         data: &[u8],
-    ) -> IdnWriteResult<()> {
+    ) -> IdnCompressResult<()> {
         let header = IdnIdentifiersHeader {
             length: data.len() as u32,
             compression: compression_method,
@@ -56,7 +56,7 @@ impl BlockWriter {
         Ok(())
     }
 
-    pub fn write_sequence(&mut self, sequence: &FastqSequence, data: &[u8]) -> IdnWriteResult<()> {
+    pub fn write_sequence(&mut self, sequence: &FastqSequence, data: &[u8]) -> IdnCompressResult<()> {
         sequence.hash(&mut self.hasher);
 
         let header = IdnSequenceHeader {
@@ -71,13 +71,13 @@ impl BlockWriter {
         Ok(())
     }
 
-    pub fn write_switch_model(&mut self, index: u8) -> IdnWriteResult<()> {
+    pub fn write_switch_model(&mut self, index: u8) -> IdnCompressResult<()> {
         let header = IdnSwitchModelHeader { model_index: index };
         let header = IdnSliceHeader::SwitchModel(header);
         self.write_slice_header(header)
     }
 
-    fn write_slice_header(&mut self, header: IdnSliceHeader) -> IdnWriteResult<()> {
+    fn write_slice_header(&mut self, header: IdnSliceHeader) -> IdnCompressResult<()> {
         header.write_to(&mut self.data)?;
         Ok(())
     }
