@@ -209,7 +209,8 @@ impl Context {
         )
     }
 
-    /// Creates a new "dummy" context that have the same probability of all symbols.
+    /// Creates a new "dummy" context that have the same probability of all
+    /// symbols.
     ///
     /// ## Examples
     /// ```

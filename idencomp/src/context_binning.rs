@@ -240,6 +240,7 @@ impl Ord for QueuedNode {
     }
 }
 
+/// A [`Context`] along with a set of [`ContextSpec`]s.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct ComplexContext {
     pub(crate) specs: Vec<ContextSpec>,
@@ -247,6 +248,23 @@ pub struct ComplexContext {
 }
 
 impl ComplexContext {
+    /// Creates new `ComplexContext` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::ContextSpec;
+    ///
+    /// let complex_ctx = ComplexContext::new([ContextSpec::new(16)], Context::dummy(5));
+    /// assert_eq!(complex_ctx.specs(), &vec![ContextSpec::new(16)]);
+    /// assert_eq!(complex_ctx.context(), &Context::dummy(5));
+    /// ```
+    ///
+    /// # Panics
+    /// This function panics if the collection of [`ContextSpec`]s has any
+    /// duplicate values.
+    #[must_use]
     pub fn new<T: Into<Vec<ContextSpec>>>(specs: T, context: Context) -> Self {
         let mut specs = specs.into();
         specs.sort();
@@ -255,20 +273,72 @@ impl ComplexContext {
         Self { specs, context }
     }
 
+    /// Creates new `ComplexContext` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::ContextSpec;
+    ///
+    /// let complex_ctx = ComplexContext::with_single_spec(ContextSpec::new(16), Context::dummy(5));
+    /// assert_eq!(complex_ctx.specs(), &vec![ContextSpec::new(16)]);
+    /// assert_eq!(complex_ctx.context(), &Context::dummy(5));
+    /// ```
+    #[must_use]
     pub fn with_single_spec(spec: ContextSpec, context: Context) -> Self {
         let specs = vec![spec];
 
         Self { specs, context }
     }
 
+    /// Returns the collection of [`ContextSpec`]s of this `ComplexContext`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::ContextSpec;
+    ///
+    /// let complex_ctx = ComplexContext::with_single_spec(ContextSpec::new(16), Context::dummy(5));
+    /// assert_eq!(complex_ctx.specs(), &vec![ContextSpec::new(16)]);
+    /// ```
+    #[must_use]
     pub fn specs(&self) -> &Vec<ContextSpec> {
         &self.specs
     }
 
+    /// Returns the [`Context`] of this `ComplexContext`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::ContextSpec;
+    ///
+    /// let complex_ctx = ComplexContext::with_single_spec(ContextSpec::new(16), Context::dummy(5));
+    /// assert_eq!(complex_ctx.context(), &Context::dummy(5));
+    /// ```
+    #[must_use]
     pub fn context(&self) -> &Context {
         &self.context
     }
 
+    /// Takes this `ComplexContext` instance and returns owned collection of
+    /// [`ContextSpec`]s and [`Context`].
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::ContextSpec;
+    ///
+    /// let complex_ctx = ComplexContext::with_single_spec(ContextSpec::new(16), Context::dummy(5));
+    /// let (specs, ctx) = complex_ctx.into_spec_and_context();
+    /// assert_eq!(specs, vec![ContextSpec::new(16)]);
+    /// assert_eq!(ctx, Context::dummy(5));
+    /// ```
+    #[must_use]
     pub fn into_spec_and_context(self) -> (Vec<ContextSpec>, Context) {
         (self.specs, self.context)
     }

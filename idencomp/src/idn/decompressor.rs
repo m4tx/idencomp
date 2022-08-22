@@ -37,9 +37,11 @@ pub enum IdnDecompressorError {
     InvalidVersion(u8),
     /// The calculated and saved block content checksums are not equal.
     BlockChecksumMismatch(u32, u32),
-    /// The model index requested in a switch is greater than the total number of models.
+    /// The model index requested in a switch is greater than the total number
+    /// of models.
     InvalidModelIndex(u8, u8),
-    /// Sequence slice occurred without prior acid/quality score "switch model" slice.
+    /// Sequence slice occurred without prior acid/quality score "switch model"
+    /// slice.
     NoActiveModel(ModelType),
     /// Unknown model identifier occurred in the file metadata.
     UnknownModel(ModelIdentifier),

@@ -56,7 +56,11 @@ impl BlockWriter {
         Ok(())
     }
 
-    pub fn write_sequence(&mut self, sequence: &FastqSequence, data: &[u8]) -> IdnCompressResult<()> {
+    pub fn write_sequence(
+        &mut self,
+        sequence: &FastqSequence,
+        data: &[u8],
+    ) -> IdnCompressResult<()> {
         sequence.hash(&mut self.hasher);
 
         let header = IdnSequenceHeader {

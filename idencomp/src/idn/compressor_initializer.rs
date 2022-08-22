@@ -3,7 +3,7 @@ use std::io::{Seek, Write};
 use log::debug;
 
 use crate::fastq::FastqSequence;
-use crate::idn::compressor::{IdnCompressorOptions, IdnCompressResult};
+use crate::idn::compressor::{IdnCompressResult, IdnCompressorOptions};
 use crate::idn::model_chooser::ModelChooser;
 use crate::idn::writer_idn::IdnWriter;
 use crate::model::ModelIdentifier;

@@ -8,8 +8,8 @@ use log::debug;
 
 use crate::fastq::FastqSequence;
 use crate::idn::compressor::{
-    CompressionQuality, CompressionStats, IdnCompressorOptions, IdnCompressorOutState,
-    IdnCompressResult,
+    CompressionQuality, CompressionStats, IdnCompressResult, IdnCompressorOptions,
+    IdnCompressorOutState,
 };
 use crate::idn::data::IdnIdentifierCompression;
 use crate::idn::model_chooser::ModelChooser;

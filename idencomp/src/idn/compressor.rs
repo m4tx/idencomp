@@ -78,10 +78,24 @@ impl Error for IdnCompressorError {
 /// The result of compressing IDN.
 pub type IdnCompressResult<T> = Result<T, IdnCompressorError>;
 
+/// Compression quality, as a number between 1 and 9. 1 means the fastest, while
+/// 9 is the slowest and producing the smallest files.
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Ord, PartialOrd)]
 pub struct CompressionQuality(u8);
 
 impl CompressionQuality {
+    /// Creates new `CompressionQuality` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::compressor::CompressionQuality;
+    ///
+    /// let quality = CompressionQuality::new(5);
+    /// assert_eq!(quality.get(), 5);
+    /// ```
+    ///
+    /// # Panic
+    /// This function panics if the value is not between 1 and 9 (inclusive).
     #[must_use]
     pub const fn new(value: u8) -> Self {
         assert!(value >= 1);
@@ -90,6 +104,15 @@ impl CompressionQuality {
         Self(value)
     }
 
+    /// Returns this `CompressionQuality` value as a number.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::compressor::CompressionQuality;
+    ///
+    /// let quality = CompressionQuality::new(5);
+    /// assert_eq!(quality.get(), 5);
+    /// ```
     #[must_use]
     pub const fn get(&self) -> u8 {
         self.0
@@ -102,6 +125,7 @@ impl Default for CompressionQuality {
     }
 }
 
+/// IDN compression parameters that can be set by user.
 #[derive(Debug, Clone)]
 pub struct IdnCompressorParams {
     model_provider: ModelProvider,
@@ -114,6 +138,15 @@ pub struct IdnCompressorParams {
 }
 
 impl IdnCompressorParams {
+    /// Returns a new [`IdnCompressorParamsBuilder`] instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::compressor::IdnCompressorParams;
+    ///
+    /// let _params: IdnCompressorParams = IdnCompressorParams::builder().build();
+    /// ```
+    #[must_use]
     pub fn builder() -> IdnCompressorParamsBuilder {
         IdnCompressorParamsBuilder::new()
     }
@@ -125,6 +158,8 @@ impl Default for IdnCompressorParams {
     }
 }
 
+/// A builder object that can be used to build [`IdnCompressorParams`]
+/// instances.
 #[derive(Debug, Clone)]
 pub struct IdnCompressorParamsBuilder {
     model_provider: ModelProvider,
@@ -137,6 +172,15 @@ pub struct IdnCompressorParamsBuilder {
 }
 
 impl IdnCompressorParamsBuilder {
+    /// Returns a new [`IdnCompressorParamsBuilder`] instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::compressor::{IdnCompressorParams, IdnCompressorParamsBuilder};
+    ///
+    /// let _params: IdnCompressorParams = IdnCompressorParamsBuilder::new().build();
+    /// ```
+    #[must_use]
     pub fn new() -> Self {
         Self {
             model_provider: ModelProvider::default(),
@@ -149,42 +193,54 @@ impl IdnCompressorParamsBuilder {
         }
     }
 
+    /// Sets the [`ModelProvider`] for this compressor.
     pub fn model_provider(&mut self, model_provider: ModelProvider) -> &mut Self {
         let mut new = self;
         new.model_provider = model_provider;
         new
     }
 
+    /// Sets the maximum block length. The number is the maximum total length of
+    /// sequences in a single block.
     pub fn max_block_total_len(&mut self, max_block_total_len: usize) -> &mut Self {
         let mut new = self;
         new.max_block_total_len = max_block_total_len;
         new
     }
 
+    /// Sets given [`ProgressNotifier`] instance for this compressor.
     pub fn progress_notifier(&mut self, progress_notifier: Arc<dyn ProgressNotifier>) -> &mut Self {
         let mut new = self;
         new.progress_notifier = progress_notifier;
         new
     }
 
+    /// Sets the number of additional threads that can be spawned when
+    /// compressing the data.
     pub fn thread_num(&mut self, thread_num: usize) -> &mut Self {
         let mut new = self;
         new.thread_num = thread_num;
         new
     }
 
+    /// Sets whether the sequence identifiers should be stored in the compressed
+    /// file.
     pub fn include_identifiers(&mut self, include_identifiers: bool) -> &mut Self {
         let mut new = self;
         new.include_identifiers = include_identifiers;
         new
     }
 
+    /// Sets the desired compression quality.
     pub fn quality(&mut self, quality: CompressionQuality) -> &mut Self {
         let mut new = self;
         new.quality = quality;
         new
     }
 
+    /// Sets the "fast" mode, which sets the compression quality to 1 and
+    /// ignores generating some statistics (this doesn't hurt the compression
+    /// quality any more, though).
     pub fn fast(&mut self, fast: bool) -> &mut Self {
         let mut new = self;
         new.fast = fast;
@@ -194,6 +250,16 @@ impl IdnCompressorParamsBuilder {
         new
     }
 
+    /// Builds and returns a [`IdnCompressorParams`] instance from the date set
+    /// in this builder.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::compressor::{IdnCompressorParams, IdnCompressorParamsBuilder};
+    ///
+    /// let _params: IdnCompressorParams = IdnCompressorParamsBuilder::new().build();
+    /// ```
+    #[must_use]
     pub fn build(&mut self) -> IdnCompressorParams {
         IdnCompressorParams {
             model_provider: self.model_provider.clone(),
@@ -214,7 +280,7 @@ impl Default for IdnCompressorParamsBuilder {
 }
 
 #[derive(Debug)]
-pub struct IdnCompressorOptions {
+pub(super) struct IdnCompressorOptions {
     pub(super) model_provider: ModelProvider,
     pub(super) progress_notifier: Arc<dyn ProgressNotifier>,
     pub(super) include_identifiers: bool,
@@ -346,6 +412,7 @@ impl<W: Write + Send> IdnCompressorInner<W> {
     }
 }
 
+/// IDN file format compressor.
 #[derive(Debug)]
 pub struct IdnCompressor<W> {
     // Inner communication
@@ -363,11 +430,30 @@ pub struct IdnCompressor<W> {
 }
 
 impl<W: Write + Send> IdnCompressor<W> {
+    /// Creates a new `IdnCompressor` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::compressor::IdnCompressor;
+    ///
+    /// let mut vec = Vec::new();
+    /// let compressor = IdnCompressor::new(&mut vec);
+    /// ```
     #[must_use]
     pub fn new(writer: W) -> Self {
         Self::with_params(writer, IdnCompressorParams::default())
     }
 
+    /// Creates a new `IdnCompressor` instance with given params.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::compressor::{IdnCompressor, IdnCompressorParams};
+    ///
+    /// let mut vec = Vec::new();
+    /// let mut params = IdnCompressorParams::builder().fast(true).build();
+    /// let compressor = IdnCompressor::with_params(&mut vec, params);
+    /// ```
     #[must_use]
     pub fn with_params(writer: W, params: IdnCompressorParams) -> Self {
         let max_block_total_len = params.max_block_total_len;
@@ -410,6 +496,24 @@ impl<W: Write + Send> IdnCompressor<W> {
         }
     }
 
+    /// Adds given sequence to be compressed in given file.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::{FastqQualityScore, FastqSequence};
+    /// use idencomp::idn::compressor::{IdnCompressor, IdnCompressorError};
+    /// use idencomp::sequence::{Acid, NucleotideSequenceIdentifier};
+    ///
+    /// let mut vec = Vec::new();
+    /// let mut compressor = IdnCompressor::new(&mut vec);
+    /// compressor.add_sequence(FastqSequence::new(
+    ///     NucleotideSequenceIdentifier::EMPTY,
+    ///     [Acid::A],
+    ///     [FastqQualityScore::new(5)],
+    /// ))?;
+    ///
+    /// # Ok::<(), IdnCompressorError>(())
+    /// ```
     pub fn add_sequence(&mut self, sequence: FastqSequence) -> IdnCompressResult<()> {
         let seq_len = sequence.len();
         if seq_len > self.max_seq_len() {
@@ -454,6 +558,20 @@ impl<W: Write + Send> IdnCompressor<W> {
         Ok(())
     }
 
+    /// Finishes any remaining processing and consumes this `IdnCompressor`
+    /// instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::compressor::{IdnCompressor, IdnCompressorError};
+    ///
+    /// let mut vec = Vec::new();
+    /// let compressor = IdnCompressor::new(&mut vec);
+    /// compressor.finish()?;
+    /// assert_eq!(vec.is_empty(), false);
+    ///
+    /// # Ok::<(), IdnCompressorError>(())
+    /// ```
     pub fn finish(mut self) -> IdnCompressResult<()> {
         if !self.block.is_empty() {
             self.make_block()?;
