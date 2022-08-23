@@ -13,6 +13,18 @@ use crate::context_spec::ContextSpec;
 use crate::model::Model;
 use crate::progress::{DummyProgressNotifier, ProgressNotifier};
 
+/// Makes a [`ContextTree`] by performing context binning on all contexts in
+/// given model.
+///
+/// # Examples
+/// ```
+/// use idencomp::context_binning::{bin_contexts_with_model, ContextBinningOptions};
+/// use idencomp::model::{Model, ModelType};
+///
+/// let model = Model::empty(ModelType::Acids);
+/// let tree = bin_contexts_with_model(&model, &ContextBinningOptions::default());
+/// assert_eq!(tree.is_empty(), true);
+/// ```
 #[must_use]
 pub fn bin_contexts_with_model(model: &Model, options: &ContextBinningOptions) -> ContextTree {
     let complex_contexts = model.as_complex_contexts();
@@ -30,6 +42,21 @@ pub fn bin_contexts_with_model(model: &Model, options: &ContextBinningOptions) -
     bin_contexts_with_keys(contexts, options)
 }
 
+/// Makes a [`ContextTree`] by performing context binning on given (spec,
+/// context) pairs.
+///
+/// # Examples
+/// ```
+/// use idencomp::context::Context;
+/// use idencomp::context_binning::{bin_contexts_with_keys, ContextBinningOptions};
+/// use idencomp::context_spec::ContextSpec;
+///
+/// let tree = bin_contexts_with_keys(
+///     [(ContextSpec::new(0), Context::dummy(4))],
+///     &ContextBinningOptions::default(),
+/// );
+/// assert_eq!(tree.len(), 1);
+/// ```
 #[must_use]
 pub fn bin_contexts_with_keys<I>(contexts: I, options: &ContextBinningOptions) -> ContextTree
 where
@@ -70,6 +97,9 @@ where
 #[must_use]
 fn bin_contexts_nodes(mut nodes: Vec<ContextNode>, options: &ContextBinningOptions) -> ContextTree {
     let input_length = nodes.len();
+    if input_length == 0 {
+        return ContextTree::default();
+    }
 
     let initial_indices: Vec<(usize, usize)> = (0..nodes.len()).tuple_combinations().collect();
     let mut initial_elements = Vec::with_capacity(initial_indices.len());
@@ -121,6 +151,7 @@ fn bin_contexts_nodes(mut nodes: Vec<ContextNode>, options: &ContextBinningOptio
     ContextTree::new(nodes)
 }
 
+/// Context binning parameters that can be set by user.
 #[derive(Debug)]
 pub struct ContextBinningOptions {
     progress_notifier: Box<dyn ProgressNotifier>,
@@ -128,6 +159,14 @@ pub struct ContextBinningOptions {
 }
 
 impl ContextBinningOptions {
+    /// Returns a new builder instance for `ContextBinningOptions`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context_binning::ContextBinningOptions;
+    ///
+    /// let _options: ContextBinningOptions = ContextBinningOptions::builder().build();
+    /// ```
     pub fn builder() -> ContextBinningOptionsBuilder {
         ContextBinningOptionsBuilder::new()
     }
@@ -139,12 +178,21 @@ impl Default for ContextBinningOptions {
     }
 }
 
+/// A builder for [`ContextBinningOptions`].
 pub struct ContextBinningOptionsBuilder {
     progress_notifier: Box<dyn ProgressNotifier>,
     pre_binning_num: usize,
 }
 
 impl ContextBinningOptionsBuilder {
+    /// Returns a new `ContextBinningOptionsBuilder` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context_binning::{ContextBinningOptions, ContextBinningOptionsBuilder};
+    ///
+    /// let _options: ContextBinningOptions = ContextBinningOptionsBuilder::new().build();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -153,16 +201,27 @@ impl ContextBinningOptionsBuilder {
         }
     }
 
+    /// Sets the progress notifier to the specific object.
     pub fn progress_notifier(mut self, progress_notifier: Box<dyn ProgressNotifier>) -> Self {
         self.progress_notifier = progress_notifier;
         self
     }
 
+    /// Sets the maximum number of contexts, above which pre-binning is
+    /// performed.
     pub fn pre_binning_num(mut self, pre_binning_num: usize) -> Self {
         self.pre_binning_num = pre_binning_num;
         self
     }
 
+    /// Builds the `ContextBinningOptions`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context_binning::{ContextBinningOptions, ContextBinningOptionsBuilder};
+    ///
+    /// let _options: ContextBinningOptions = ContextBinningOptionsBuilder::new().build();
+    /// ```
     #[must_use]
     pub fn build(self) -> ContextBinningOptions {
         ContextBinningOptions {
@@ -409,24 +468,58 @@ impl ContextTree {
     #[must_use]
     pub(crate) fn new<T: Into<Vec<ContextNode>>>(vec: T) -> Self {
         let vec = vec.into();
-        assert!(!vec.is_empty());
 
         Self { vec }
     }
 
+    /// Returns the number of nodes in this `ContextTree`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context_binning::ContextTree;
+    ///
+    /// assert_eq!(ContextTree::default().len(), 0);
+    /// ```
     #[must_use]
-    pub fn size(&self) -> usize {
+    pub fn len(&self) -> usize {
         self.vec.len()
     }
 
+    /// Returns whether this `ContextTree` does not contain any nodes.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context_binning::ContextTree;
+    ///
+    /// assert_eq!(ContextTree::default().is_empty(), true);
+    /// ```
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.vec.is_empty()
+    }
+
+    /// Returns the list of [`ContextNode`]s in this `ContextTree`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context_binning::ContextTree;
+    ///
+    /// assert_eq!(ContextTree::default().nodes(), &vec![]);
+    /// ```
     #[must_use]
     pub fn nodes(&self) -> &Vec<ContextNode> {
         &self.vec
     }
 
+    /// Traverses through this context tree producing a maximum of
+    /// `num_contexts` [`ComplexContext`]s. This traverses into the nodes with
+    /// the least merge cost first.
     #[must_use]
     pub fn traverse(self, num_contexts: usize) -> Vec<ComplexContext> {
         assert!(num_contexts > 0);
+        if self.vec.is_empty() {
+            return Vec::default();
+        }
 
         let mut queue: BinaryHeap<IndexedContextNode> = BinaryHeap::new();
         queue.push(IndexedContextNode::new(&self.vec, self.vec.len() - 1));
@@ -484,6 +577,12 @@ impl ContextTree {
                 self.traverse_and_combine(*right_child, specs);
             }
         }
+    }
+}
+
+impl Default for ContextTree {
+    fn default() -> Self {
+        Self::new(Vec::default())
     }
 }
 
@@ -558,6 +657,7 @@ impl ContextNode {
         }
     }
 
+    /// Returns the context object for this node.
     #[must_use]
     pub fn context(&self) -> &Context {
         match self {
@@ -566,6 +666,7 @@ impl ContextNode {
         }
     }
 
+    /// Returns the merge cost of this node (0 in case this node is a leaf).
     #[must_use]
     pub fn merge_cost(&self) -> ContextMergeCost {
         match self {
@@ -597,7 +698,7 @@ mod tests {
 
         let binned = bin_contexts_with_keys(contexts, &Default::default());
 
-        assert_eq!(binned.size(), 1);
+        assert_eq!(binned.len(), 1);
         assert_eq!(binned.nodes()[0], ContextNode::new_leaf(spec(0), context));
     }
 
@@ -610,7 +711,7 @@ mod tests {
 
         let binned = bin_contexts_with_model(&model, &Default::default());
 
-        assert_eq!(binned.size(), 1);
+        assert_eq!(binned.len(), 1);
         assert_eq!(binned.nodes()[0], ContextNode::new_leaf(spec(0), context));
     }
 
@@ -622,7 +723,7 @@ mod tests {
 
         let binned = bin_contexts_with_keys(contexts, &Default::default());
 
-        assert_eq!(binned.size(), 3);
+        assert_eq!(binned.len(), 3);
         assert_eq!(binned.nodes()[0], ContextNode::new_leaf(spec(1), context1));
         assert_eq!(binned.nodes()[1], ContextNode::new_leaf(spec(2), context2));
         let expected_context = Context::new_from(1.0, [0.0625, 0.5, 0.25625, 0.18125]);
@@ -646,7 +747,7 @@ mod tests {
         let options = ContextBinningOptions::builder().pre_binning_num(2).build();
         let binned = bin_contexts_with_keys(contexts, &options);
 
-        assert_eq!(binned.size(), 3);
+        assert_eq!(binned.len(), 3);
         assert_eq!(binned.nodes()[0], ContextNode::new_leaf(spec(1), context1));
         let expected_context_binned = Context::new_from(0.6, [0.625, 0.125, 0.125, 0.125]);
         assert_eq!(
@@ -683,7 +784,7 @@ mod tests {
 
         let binned = bin_contexts_with_keys(contexts, &Default::default());
 
-        assert_eq!(binned.size(), 15);
+        assert_eq!(binned.len(), 15);
         assert_eq!(binned.nodes()[0], ContextNode::new_leaf(spec(1), context1));
         assert_eq!(binned.nodes()[1], ContextNode::new_leaf(spec(2), context2));
         assert_eq!(binned.nodes()[2], ContextNode::new_leaf(spec(3), context3));
@@ -746,7 +847,7 @@ mod tests {
     #[test]
     fn test_bin_bigger_model() {
         let tree = bin_contexts_with_model(&RANDOM_200_CTX_Q_SCORE_MODEL, &Default::default());
-        assert_eq!(tree.size(), 399);
+        assert_eq!(tree.len(), 399);
     }
 
     #[test]

@@ -76,13 +76,21 @@ impl IdnBlockDecompressor {
 
     pub fn process(mut self) -> IdnDecompressResult<()> {
         let mut sequences = Vec::new();
-        while let Some(sequence) = self.next_sequence()? {
+        while let Some(sequence) = self.next_sequence_catch_error()? {
             sequences.push(sequence);
         }
 
         let _guard = self.out_state.block_lock().lock(self.block_index);
         self.out_state.data_queue().add_all(sequences);
         Ok(())
+    }
+
+    fn next_sequence_catch_error(&mut self) -> IdnDecompressResult<Option<FastqSequence>> {
+        let result = self.next_sequence();
+        if result.is_err() {
+            self.out_state.data_queue().set_finished();
+        }
+        result
     }
 
     fn next_sequence(&mut self) -> IdnDecompressResult<Option<FastqSequence>> {

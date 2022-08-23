@@ -39,12 +39,21 @@ impl Error for FastqWriterError {
 
 type FastqWriteResult<T> = Result<T, FastqWriterError>;
 
+/// FASTQ writing parameters that can be set by user.
 #[derive(Debug, Clone)]
 pub struct FastqWriterParams {
     output_title_with_separator: bool,
 }
 
 impl FastqWriterParams {
+    /// Returns new builder instance for `FastqWriterParams`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::writer::FastqWriterParams;
+    ///
+    /// let params: FastqWriterParams = FastqWriterParams::builder().build();
+    /// ```
     #[must_use]
     pub fn builder() -> FastqWriterParamsBuilder {
         FastqWriterParamsBuilder::new()
@@ -65,6 +74,13 @@ pub struct FastqWriterParamsBuilder {
 
 impl FastqWriterParamsBuilder {
     /// Returns a new `FastqWriterParamsBuilder` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::writer::{FastqWriterParams, FastqWriterParamsBuilder};
+    ///
+    /// let params: FastqWriterParams = FastqWriterParamsBuilder::new().build();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -72,13 +88,31 @@ impl FastqWriterParamsBuilder {
         }
     }
 
-    /// Whether the FASTQ writer shouin along
+    /// Whether the FASTQ writer should write the sequence names along with the
+    /// separators.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::writer::{FastqWriterParams, FastqWriterParamsBuilder};
+    ///
+    /// let params: FastqWriterParams = FastqWriterParamsBuilder::new()
+    ///     .output_title_with_separator(true)
+    ///     .build();
+    /// ```
     pub fn output_title_with_separator(&mut self, output_title_with_separator: bool) -> &mut Self {
         let mut new = self;
         new.output_title_with_separator = output_title_with_separator;
         new
     }
 
+    /// Builds the [`FastqWriterParams`] object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::writer::{FastqWriterParams, FastqWriterParamsBuilder};
+    ///
+    /// let params: FastqWriterParams = FastqWriterParamsBuilder::new().build();
+    /// ```
     #[must_use]
     pub fn build(&self) -> FastqWriterParams {
         FastqWriterParams {
@@ -93,6 +127,8 @@ impl Default for FastqWriterParamsBuilder {
     }
 }
 
+/// A serializer for [`FastqSequence`] objects that outputs the data in the
+/// FASTQ format.
 #[derive(Debug)]
 pub struct FastqWriter<W> {
     writer: W,
@@ -100,16 +136,57 @@ pub struct FastqWriter<W> {
 }
 
 impl<W: Write> FastqWriter<W> {
+    /// Creates new `FastqWriter` instance with default parameters.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::writer::FastqWriter;
+    ///
+    /// let mut buf = Vec::new();
+    /// let _writer = FastqWriter::new(&mut buf);
+    /// ```
     #[must_use]
     pub fn new(writer: W) -> Self {
         Self::with_params(writer, FastqWriterParams::default())
     }
 
+    /// Creates new `FastqWriter` instance with given parameters.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::writer::{FastqWriter, FastqWriterParams};
+    ///
+    /// let mut buf = Vec::new();
+    /// let params = FastqWriterParams::builder()
+    ///     .output_title_with_separator(true)
+    ///     .build();
+    /// let _writer = FastqWriter::with_params(&mut buf, params);
+    /// ```
     #[must_use]
     pub fn with_params(writer: W, params: FastqWriterParams) -> Self {
         Self { writer, params }
     }
 
+    /// Writes the sequence as FASTQ.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::writer::FastqWriter;
+    /// use idencomp::fastq::{FastqQualityScore, FastqSequence};
+    /// # use idencomp::fastq::writer::FastqWriterError;
+    /// use idencomp::sequence::{Acid, NucleotideSequenceIdentifier};
+    ///
+    /// let mut buf = Vec::new();
+    /// let mut writer = FastqWriter::new(&mut buf);
+    /// let sequence = FastqSequence::new(
+    ///     NucleotideSequenceIdentifier::from("seq"),
+    ///     [Acid::A],
+    ///     [FastqQualityScore::new(5)],
+    /// );
+    /// writer.write_sequence(&sequence)?;
+    ///
+    /// # Ok::<(), FastqWriterError>(())
+    /// ```
     pub fn write_sequence(&mut self, fastq_sequence: &FastqSequence) -> FastqWriteResult<()> {
         self.output_title(fastq_sequence)?;
         self.output_acids(fastq_sequence.acids())?;
@@ -169,6 +246,19 @@ impl<W: Write> FastqWriter<W> {
         Ok(())
     }
 
+    /// Flushes the internal writer object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::writer::FastqWriter;
+    /// # use idencomp::fastq::writer::FastqWriterError;
+    ///
+    /// let mut buf = Vec::new();
+    /// let mut writer = FastqWriter::new(&mut buf);
+    /// writer.flush()?;
+    ///
+    /// # Ok::<(), FastqWriterError>(())
+    /// ```
     pub fn flush(&mut self) -> FastqWriteResult<()> {
         self.writer.flush()?;
 

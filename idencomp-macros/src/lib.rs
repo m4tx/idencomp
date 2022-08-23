@@ -282,16 +282,19 @@ pub fn model(input: TokenStream) -> TokenStream {
         .collect();
 
     let output = quote! {
+        #[doc = "An exact type of a context specifier, which means how it is generated, using acids, quality scores, and position data."]
         #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
         pub enum ContextSpecType {
             #(#enum_variants,)*
         }
 
         impl ContextSpecType {
+            #[doc = "An array storing all possible enum variants."]
             pub const VALUES: [ContextSpecType; #variant_num] = [
                 #(#enum_values,)*
             ];
 
+            #[doc = "Returns the enum variant name for this context spec type."]
             #[must_use]
             pub fn name(&self) -> &'static str {
                 match self {
@@ -299,6 +302,7 @@ pub fn model(input: TokenStream) -> TokenStream {
                 }
             }
 
+            #[doc = "Returns a context spec generator instance for this context spec type."]
             #[must_use]
             pub fn generator(&self, length: usize) -> Box<dyn ContextSpecGenerator> {
                 match self {
@@ -306,6 +310,7 @@ pub fn model(input: TokenStream) -> TokenStream {
                 }
             }
 
+            #[doc = "Returns the maximum value of the context spec this type can produce."]
             #[must_use]
             pub fn spec_num(&self) -> u32 {
                 match self {

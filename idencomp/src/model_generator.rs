@@ -6,6 +6,8 @@ use crate::context_binning::ComplexContext;
 use crate::context_spec::ContextSpec;
 use crate::sequence::Symbol;
 
+/// An object that helps generating statistic models out of nucleotide
+/// sequences.
 #[derive(Debug)]
 pub struct ModelGenerator<T> {
     map: HashMap<ContextSpec, ContextCounter<T>>,
@@ -13,6 +15,18 @@ pub struct ModelGenerator<T> {
 }
 
 impl<T: Symbol> ModelGenerator<T> {
+    /// Creates a new `ModelGenerator` instance.
+    ///
+    /// # Example
+    /// ```
+    /// use idencomp::context_spec::ContextSpec;
+    /// use idencomp::model_generator::ModelGenerator;
+    /// use idencomp::sequence::Acid;
+    ///
+    /// let mut generator = ModelGenerator::<Acid>::new();
+    /// generator.add(ContextSpec::new(123), Acid::A);
+    /// let _contexts = generator.complex_contexts();
+    /// ```
     #[must_use]
     pub fn new() -> Self {
         Self {
@@ -21,6 +35,18 @@ impl<T: Symbol> ModelGenerator<T> {
         }
     }
 
+    /// Adds a new value associated with a context specifier.
+    ///
+    /// # Example
+    /// ```
+    /// use idencomp::context_spec::ContextSpec;
+    /// use idencomp::model_generator::ModelGenerator;
+    /// use idencomp::sequence::Acid;
+    ///
+    /// let mut generator = ModelGenerator::<Acid>::new();
+    /// generator.add(ContextSpec::new(123), Acid::A);
+    /// assert_eq!(generator.len(), 1);
+    /// ```
     pub fn add(&mut self, context_spec: ContextSpec, value: T) {
         self.map
             .entry(context_spec)
@@ -29,16 +55,66 @@ impl<T: Symbol> ModelGenerator<T> {
         self.count += 1;
     }
 
+    /// Returns the number of distinct context specifiers encountered so far.
+    ///
+    /// # Example
+    /// ```
+    /// use idencomp::context_spec::ContextSpec;
+    /// use idencomp::model_generator::ModelGenerator;
+    /// use idencomp::sequence::Acid;
+    ///
+    /// let mut generator = ModelGenerator::<Acid>::new();
+    /// generator.add(ContextSpec::new(123), Acid::A);
+    /// generator.add(ContextSpec::new(123), Acid::G);
+    /// generator.add(ContextSpec::new(423), Acid::A);
+    /// assert_eq!(generator.len(), 2);
+    /// ```
     #[must_use]
     pub fn len(&self) -> usize {
         self.map.len()
     }
 
+    /// Returns whether nothing has been added to this `ModelGenerator`.
+    ///
+    /// # Example
+    /// ```
+    /// use idencomp::context_spec::ContextSpec;
+    /// use idencomp::model_generator::ModelGenerator;
+    /// use idencomp::sequence::Acid;
+    ///
+    /// let mut generator = ModelGenerator::<Acid>::new();
+    /// assert_eq!(generator.is_empty(), true);
+    /// generator.add(ContextSpec::new(123), Acid::A);
+    /// assert_eq!(generator.is_empty(), false);
+    /// ```
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.map.is_empty()
     }
 
+    /// Returns the list of [`ComplexContext`] instances, which then can be used
+    /// to create a model.
+    ///
+    /// # Example
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::ContextSpec;
+    /// use idencomp::model_generator::ModelGenerator;
+    /// use idencomp::sequence::Acid;
+    ///
+    /// let mut generator = ModelGenerator::<Acid>::new();
+    /// generator.add(ContextSpec::new(123), Acid::A);
+    /// let contexts = generator.complex_contexts();
+    /// assert_eq!(contexts.len(), 1);
+    /// assert_eq!(
+    ///     contexts[0],
+    ///     ComplexContext::with_single_spec(
+    ///         ContextSpec::new(123),
+    ///         Context::new_from(1.0, [0.0, 1.0, 0.0, 0.0, 0.0])
+    ///     )
+    /// );
+    /// ```
     #[must_use]
     pub fn complex_contexts(&self) -> Vec<ComplexContext> {
         self.map
@@ -67,6 +143,8 @@ impl<T: Symbol> Default for ModelGenerator<T> {
     }
 }
 
+/// A counter for symbols. Allows to calculate percentage how often does a
+/// certain symbol occur in a sequence.
 #[derive(Debug)]
 pub struct ContextCounter<T> {
     counts: Vec<usize>,
@@ -74,6 +152,16 @@ pub struct ContextCounter<T> {
 }
 
 impl<T: Symbol> ContextCounter<T> {
+    /// Crates a new `ContextCounter` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model_generator::ContextCounter;
+    /// use idencomp::sequence::Acid;
+    ///
+    /// let _counter = ContextCounter::<Acid>::new();
+    /// ```
+    #[must_use]
     pub fn new() -> Self {
         Self {
             counts: vec![0; T::SIZE],
@@ -81,10 +169,37 @@ impl<T: Symbol> ContextCounter<T> {
         }
     }
 
+    /// Adds a symbol to the counter.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model_generator::ContextCounter;
+    /// use idencomp::sequence::Acid;
+    ///
+    /// let mut counter = ContextCounter::<Acid>::new();
+    /// counter.add(Acid::A);
+    /// ```
     pub fn add(&mut self, value: T) {
         self.counts[value.to_usize()] += 1;
     }
 
+    /// Gets the percentage probability of a certain symbol occurring in a
+    /// sequence.
+    ///
+    /// # Examples
+    /// ```
+    /// use approx::assert_abs_diff_eq;
+    /// use idencomp::model_generator::ContextCounter;
+    /// use idencomp::sequence::Acid;
+    ///
+    /// let mut counter = ContextCounter::<Acid>::new();
+    /// counter.add(Acid::A);
+    /// counter.add(Acid::A);
+    /// counter.add(Acid::C);
+    /// assert_abs_diff_eq!(counter.percentage(Acid::A), 0.66666667);
+    /// assert_abs_diff_eq!(counter.percentage(Acid::C), 0.33333333);
+    /// ```
+    #[must_use]
     pub fn percentage(&self, value: T) -> f32 {
         if self.count() == 0 {
             return 0.0;
@@ -92,6 +207,20 @@ impl<T: Symbol> ContextCounter<T> {
         self.counts[value.to_usize()] as f32 / self.count() as f32
     }
 
+    /// Returns the total number of symbols added so far.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model_generator::ContextCounter;
+    /// use idencomp::sequence::Acid;
+    ///
+    /// let mut counter = ContextCounter::<Acid>::new();
+    /// counter.add(Acid::A);
+    /// counter.add(Acid::A);
+    /// counter.add(Acid::C);
+    /// assert_eq!(counter.count(), 3);
+    /// ```
+    #[must_use]
     pub fn count(&self) -> usize {
         self.counts.iter().sum()
     }

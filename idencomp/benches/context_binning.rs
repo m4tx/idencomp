@@ -9,7 +9,7 @@ fn bin_200_ctx(c: &mut Criterion) {
     c.bench_function("Make 200 context tree", |b| {
         b.iter(|| {
             let tree = bin_contexts_with_model(&RANDOM_200_CTX_Q_SCORE_MODEL, &Default::default());
-            assert_eq!(tree.size(), 399);
+            assert_eq!(tree.len(), 399);
         })
     });
 }
@@ -21,7 +21,7 @@ fn bin_500_ctx(c: &mut Criterion) {
     c.bench_function("Make 500 context tree", |b| {
         b.iter(|| {
             let tree = bin_contexts_with_model(&RANDOM_500_CTX_Q_SCORE_MODEL, &Default::default());
-            assert_eq!(tree.size(), 999);
+            assert_eq!(tree.len(), 999);
         })
     });
 }

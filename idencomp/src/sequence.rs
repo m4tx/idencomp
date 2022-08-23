@@ -136,7 +136,9 @@ pub struct NucleotideSequence<const Q_END: usize> {
 }
 
 impl<const Q_END: usize> NucleotideSequence<Q_END> {
-    /// Creates a new instance of `NucleotideSequence`.
+    /// Creates a new instance of `NucleotideSequence`. The value of
+    /// [`Self::size()`] will be approximated by the length of the most compact
+    /// FASTQ representation.
     ///
     /// # Examples
     /// ```
@@ -151,6 +153,7 @@ impl<const Q_END: usize> NucleotideSequence<Q_END> {
     ///         QualityScore::<20>::new(15),
     ///     ],
     /// );
+    /// assert_eq!(seq.size().get(), 17);
     /// ```
     ///
     /// # Panics
@@ -179,6 +182,31 @@ impl<const Q_END: usize> NucleotideSequence<Q_END> {
         )
     }
 
+    /// Creates a new instance of `NucleotideSequence`. The value of
+    /// [`Self::size()`] is arbitrarily specified as a parameter to this
+    /// function.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::progress::ByteNum;
+    /// use idencomp::sequence::{Acid, NucleotideSequence, QualityScore};
+    ///
+    /// let seq: NucleotideSequence<20> = NucleotideSequence::with_size(
+    ///     "SEQ_1",
+    ///     [Acid::A, Acid::C, Acid::G],
+    ///     [
+    ///         QualityScore::<20>::new(5),
+    ///         QualityScore::<20>::new(10),
+    ///         QualityScore::<20>::new(15),
+    ///     ],
+    ///     ByteNum::new(150),
+    /// );
+    /// assert_eq!(seq.size().get(), 150);
+    /// ```
+    ///
+    /// # Panics
+    /// This function panics if the number of acids is not equal to the number
+    /// of quality scores.
     #[must_use]
     pub fn with_size<T, U, V>(identifier: T, acids: U, quality_scores: V, size: ByteNum) -> Self
     where
@@ -297,6 +325,19 @@ impl<const Q_END: usize> NucleotideSequence<Q_END> {
         self.acids.len()
     }
 
+    /// Returns the number of bytes this sequence originally took as FASTQ,
+    /// either approximated or specified when constructing the
+    /// `NucleotideSequence` object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::progress::ByteNum;
+    /// use idencomp::sequence::{Acid, NucleotideSequence, QualityScore};
+    ///
+    /// let seq: NucleotideSequence<20> =
+    ///     NucleotideSequence::with_size("SEQ_1", [], [], ByteNum::new(150));
+    /// assert_eq!(seq.size().get(), 150);
+    /// ```
     #[must_use]
     pub fn size(&self) -> ByteNum {
         self.size

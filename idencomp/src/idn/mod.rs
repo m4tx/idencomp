@@ -11,6 +11,8 @@ mod model_chooser;
 /// The collection of models that can be used when compressing or decompressing
 /// an IDN file.
 pub mod model_provider;
+/// Wrapper over a [`std::io::Read`] or [`std::io::Write`] object that provides
+/// a dummy [`std::io::Seek`] implementation.
 pub mod no_seek;
 #[cfg(test)]
 mod tests;

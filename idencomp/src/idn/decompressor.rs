@@ -133,6 +133,7 @@ impl Error for IdnDecompressorError {
 /// The result of decompressing IDN.
 pub type IdnDecompressResult<T> = Result<T, IdnDecompressorError>;
 
+/// IDN decompression parameters that can be set by user.
 #[derive(Debug, Clone)]
 pub struct IdnDecompressorParams {
     pub(super) model_provider: ModelProvider,
@@ -141,6 +142,15 @@ pub struct IdnDecompressorParams {
 }
 
 impl IdnDecompressorParams {
+    /// Returns a new instance of a builder for `IdnDecompressorParams`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::decompressor::IdnDecompressorParams;
+    ///
+    /// let _params: IdnDecompressorParams = IdnDecompressorParams::builder().build();
+    /// ```
+    #[must_use]
     pub fn builder() -> IdnDecompressorParamsBuilder {
         IdnDecompressorParamsBuilder::new()
     }
@@ -152,6 +162,7 @@ impl Default for IdnDecompressorParams {
     }
 }
 
+/// The builder for [`IdnDecompressorParams`].
 #[derive(Debug, Clone)]
 pub struct IdnDecompressorParamsBuilder {
     model_provider: ModelProvider,
@@ -160,6 +171,15 @@ pub struct IdnDecompressorParamsBuilder {
 }
 
 impl IdnDecompressorParamsBuilder {
+    /// Returns a new instance of `IdnDecompressorParamsBuilder`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::decompressor::{IdnDecompressorParams, IdnDecompressorParamsBuilder};
+    ///
+    /// let _params: IdnDecompressorParams = IdnDecompressorParamsBuilder::new().build();
+    /// ```
+    #[must_use]
     pub fn new() -> Self {
         Self {
             model_provider: ModelProvider::default(),
@@ -168,24 +188,37 @@ impl IdnDecompressorParamsBuilder {
         }
     }
 
+    /// Sets the model provider instance to be used for decompression.
     pub fn model_provider(&mut self, model_provider: ModelProvider) -> &mut Self {
         let mut new = self;
         new.model_provider = model_provider;
         new
     }
 
+    /// Sets the progress notifier instance.
     pub fn progress_notifier(&mut self, progress_notifier: Arc<dyn ProgressNotifier>) -> &mut Self {
         let mut new = self;
         new.progress_notifier = progress_notifier;
         new
     }
 
+    /// Sets the maximum number of additional CPU threads to be spawned during
+    /// decompression.
     pub fn thread_num(&mut self, thread_num: usize) -> &mut Self {
         let mut new = self;
         new.thread_num = thread_num;
         new
     }
 
+    /// Builds the `IdnDecompressorParams`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::decompressor::{IdnDecompressorParams, IdnDecompressorParamsBuilder};
+    ///
+    /// let _params: IdnDecompressorParams = IdnDecompressorParamsBuilder::new().build();
+    /// ```
+    #[must_use]
     pub fn build(&mut self) -> IdnDecompressorParams {
         IdnDecompressorParams {
             model_provider: self.model_provider.clone(),
@@ -342,7 +375,11 @@ impl<R: Read> IdnDecompressorInner<R> {
 
     fn read_all(&mut self) -> IdnDecompressResult<()> {
         while self.state.not_finished() {
-            self.read_next_block()?;
+            let result = self.read_next_block();
+            if result.is_err() {
+                self.out_state.data_queue.set_finished();
+            }
+            result?;
         }
         Ok(())
     }
@@ -391,6 +428,7 @@ impl<R: Read> IdnDecompressorInner<R> {
     }
 }
 
+/// IDN file format decompressor.
 #[derive(Debug)]
 pub struct IdnDecompressor<R> {
     out_state: Arc<IdnDecompressorOutState>,
@@ -403,11 +441,32 @@ pub struct IdnDecompressor<R> {
 }
 
 impl<R: Read + Send> IdnDecompressor<R> {
+    /// Creates a new `IdnDecompressor` instance.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::decompressor::IdnDecompressor;
+    ///
+    /// let vec = Vec::new();
+    /// let mut decompressor = IdnDecompressor::new(vec.as_slice());
+    /// assert_eq!(decompressor.next_sequence().is_err(), true);
+    /// ```
     #[must_use]
     pub fn new(reader: R) -> Self {
         Self::with_params(reader, IdnDecompressorParams::default())
     }
 
+    /// Creates a new `IdnDecompressor` instance with given params.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::idn::decompressor::{IdnDecompressor, IdnDecompressorParams};
+    ///
+    /// let vec = Vec::new();
+    /// let params = IdnDecompressorParams::builder().thread_num(5).build();
+    /// let mut decompressor = IdnDecompressor::with_params(vec.as_slice(), params);
+    /// assert_eq!(decompressor.next_sequence().is_err(), true);
+    /// ```
     #[must_use]
     pub fn with_params(reader: R, params: IdnDecompressorParams) -> Self {
         let start_time = Instant::now();
@@ -442,6 +501,8 @@ impl<R: Read + Send> IdnDecompressor<R> {
         }
     }
 
+    /// Reads and returns next sequence in the file. Returns `Ok(None)` if the
+    /// end of file has been reached.
     pub fn next_sequence(&mut self) -> IdnDecompressResult<Option<FastqSequence>> {
         if self.eof_reached {
             return Ok(None);
@@ -485,6 +546,8 @@ impl<R: Read + Send> IntoIterator for IdnDecompressor<R> {
     }
 }
 
+/// Iterable object for [`IdnDecompressor`], returning [`Result`]s of
+/// [`FastqSequence`]s.
 #[derive(Debug)]
 pub struct IdnDecompressorIterator<R> {
     decompressor: IdnDecompressor<R>,
@@ -516,7 +579,7 @@ impl<R> Drop for IdnDecompressor<R> {
         self.print_stats();
 
         if !self.eof_reached {
-            panic!("Cannot drop IdnDecompressor while still reading")
+            panic!("Cannot drop IdnDecompressor while still reading");
         }
     }
 }

@@ -42,11 +42,18 @@ impl ByteNum {
     }
 }
 
+/// An object that can track progress of any long-running operation. This can be
+/// implemented e.g. as a progress bar in CLI/GUI.
 pub trait ProgressNotifier: Debug + Send + Sync {
+    /// Indicates that the specified number of bytes has been processed.
     fn processed_bytes(&self, bytes: ByteNum);
 
+    /// Indicates that there will be specified number of items to be processed
+    /// (so that the maximum value for a progress bar can be set).
     fn set_iter_num(&self, num_iter: u64);
 
+    /// Indicates that a single item has been processed. This is usually used
+    /// after calling [`Self::set_iter_num()`].
     fn inc_iter(&self);
 }
 

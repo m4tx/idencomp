@@ -117,7 +117,8 @@ impl Default for FastqReaderParams {
     }
 }
 
-/// FASTQ format reader.
+/// FASTQ format reader capable of deserializing the sequences into
+/// [`FastqSequence`] objects.
 #[derive(Debug)]
 pub struct FastqReader<R> {
     reader: R,
@@ -127,11 +128,30 @@ pub struct FastqReader<R> {
 }
 
 impl<R: BufRead> FastqReader<R> {
+    /// Creates new `FastqReader` instance with default parameters.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::reader::FastqReader;
+    ///
+    /// let buf = Vec::new();
+    /// let _reader = FastqReader::new(buf.as_slice());
+    /// ```
     #[must_use]
     pub fn new(reader: R) -> Self {
         Self::with_params(reader, FastqReaderParams::default())
     }
 
+    /// Creates new `FastqReader` instance with given parameters.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::fastq::reader::{FastqReader, FastqReaderParams};
+    ///
+    /// let buf = Vec::new();
+    /// let params = FastqReaderParams::builder().delimiter(b'#').build();
+    /// let _reader = FastqReader::with_params(buf.as_slice(), params);
+    /// ```
     #[must_use]
     pub fn with_params(reader: R, params: FastqReaderParams) -> Self {
         Self {
@@ -274,6 +294,8 @@ impl<R: BufRead> IntoIterator for FastqReader<R> {
     }
 }
 
+/// Iterator implementation for [`FastqReader`] which iterates over all
+/// sequences in a file.
 #[derive(Debug)]
 pub struct FastqReaderIterator<R> {
     reader: FastqReader<R>,
