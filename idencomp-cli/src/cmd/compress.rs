@@ -8,6 +8,7 @@ use idencomp::idn::compressor::{CompressionQuality, IdnCompressor, IdnCompressor
 use idencomp::idn::model_provider::ModelProvider;
 use idencomp::progress::ProgressNotifier;
 
+#[allow(clippy::too_many_arguments)]
 pub fn compress<R: Read, W: Write + Send>(
     reader: R,
     writer: W,
