@@ -1,4 +1,5 @@
 use std::sync::{Arc, Mutex};
+use std::time::Duration;
 
 use idencomp::progress::{ByteNum, ProgressNotifier};
 use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
@@ -30,7 +31,7 @@ impl IdnProgressBar {
     pub fn new() -> IdnProgressBar {
         let init_bar = ProgressBar::hidden();
         init_bar.set_style(ProgressStyle::default_spinner());
-        init_bar.enable_steady_tick(50);
+        init_bar.enable_steady_tick(Duration::from_millis(50));
         init_bar.set_message("Initializing...");
 
         Self {
@@ -58,7 +59,6 @@ impl IdnProgressBar {
             return;
         }
 
-        self.bar.set_draw_rate(20);
         if state.length != 0 {
             self.bar.set_length(state.length);
         }
@@ -68,21 +68,27 @@ impl IdnProgressBar {
             if state.length == 0 {
                 self.bar.set_style(
                     ProgressStyle::default_spinner()
-                        .template("{spinner} {bytes}/? ({bytes_per_sec}) {msg}"),
+                        .template("{spinner} {bytes}/? ({bytes_per_sec}) {msg}")
+                        .expect("Invalid progress bar template"),
                 );
             } else {
                 self.bar.set_style(
                     ProgressStyle::default_bar()
-                        .template("{wide_bar} {bytes}/{total_bytes} [ETA {eta}]"),
+                        .template("{wide_bar} {bytes}/{total_bytes} [ETA {eta}]")
+                        .expect("Invalid progress bar template"),
                 );
             }
         } else if state.length == 0 {
             self.bar.set_style(
-                ProgressStyle::default_spinner().template("{spinner} {pos}/? ({per_sec}) {msg}"),
+                ProgressStyle::default_spinner()
+                    .template("{spinner} {pos}/? ({per_sec}) {msg}")
+                    .expect("Invalid progress bar template"),
             );
         } else {
             self.bar.set_style(
-                ProgressStyle::default_bar().template("{wide_bar} {pos}/{len} [ETA {eta}]"),
+                ProgressStyle::default_bar()
+                    .template("{wide_bar} {pos}/{len} [ETA {eta}]")
+                    .expect("Invalid progress bar template"),
             );
         }
         state.initialized = true;
