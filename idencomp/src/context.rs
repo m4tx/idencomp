@@ -301,6 +301,22 @@ impl Context {
             .unwrap_or_default()
     }
 
+    /// Returns the cost of merging two contexts into one. The merge cost is
+    /// defined as the difference of the compression rates between a model
+    /// containing the merged context vs model containing both source contexts.
+    ///
+    /// # Examples
+    /// ```
+    /// use approx::assert_abs_diff_eq;
+    /// use idencomp::context::Context;
+    ///
+    /// let left = Context::new_from(0.5, [0.0, 0.5, 0.5, 0.0, 0.0]);
+    /// let right = Context::new_from(0.5, [0.0, 0.0, 0.333, 0.333, 0.334]);
+    /// let merged = left.merge_with(&right);
+    ///
+    /// let merge_cost = Context::merge_cost(&merged, &left, &right);
+    /// assert_abs_diff_eq!(merge_cost.get(), 0.5956578);
+    /// ```
     #[must_use]
     pub fn merge_cost(merged: &Self, left: &Self, right: &Self) -> ContextMergeCost {
         let cost: f32 = merged.context_prob.get() * *merged.entropy()
@@ -310,6 +326,22 @@ impl Context {
         ContextMergeCost::new(cost)
     }
 
+    /// Converts the context's probabilities to cumulative frequencies, as
+    /// integers. The values returned are all unique and between `0` and `1 <<
+    /// scale_bits` (exclusive).
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    ///
+    /// let context = Context::new_from(0.5, [0.0, 0.0, 0.333, 0.333, 0.334]);
+    /// let freqs = context.as_integer_cum_freqs(8);
+    /// assert_eq!(freqs, [0, 1, 2, 86, 170]);
+    /// ```
+    ///
+    /// # Panics
+    /// Panics if `1 << scale_bits` is less than the number of symbols in this
+    /// `Context` instance.
     #[must_use]
     pub fn as_integer_cum_freqs(&self, scale_bits: u8) -> Vec<u32> {
         let symbols_num = self.symbol_num();
@@ -361,6 +393,21 @@ impl Context {
         }
     }
 
+    /// Converts the integer cumulative frequencies to integer frequencies.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    ///
+    /// let cum_freqs = vec![0, 1, 2, 86, 170];
+    /// let mut freqs = cum_freqs.clone();
+    /// Context::cum_freq_to_freq(&mut freqs, 256);
+    /// assert_eq!(freqs, [1, 1, 84, 84, 86]);
+    /// ```
+    ///
+    /// # See also
+    /// * [`Self::as_integer_cum_freqs()`]
+    /// * [`Self::freq_to_cum_freq()`]
     pub fn cum_freq_to_freq(cum_freq: &mut Vec<u32>, total: u32) {
         for i in 0..cum_freq.len() - 1 {
             cum_freq[i] = cum_freq[i + 1] - cum_freq[i];
@@ -369,6 +416,21 @@ impl Context {
         *last = total - *last;
     }
 
+    /// Converts the integer frequencies to integer cumulative frequencies.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    ///
+    /// let freqs = vec![1, 1, 84, 84, 86];
+    /// let mut cum_freqs = freqs.clone();
+    /// Context::freq_to_cum_freq(&mut cum_freqs);
+    /// assert_eq!(cum_freqs, [0, 1, 2, 86, 170]);
+    /// ```
+    ///
+    /// # See also
+    /// * [`Self::as_integer_cum_freqs()`]
+    /// * [`Self::freq_to_cum_freq()`]
     pub fn freq_to_cum_freq(freq: &mut Vec<u32>) {
         let mut acc: u32 = 0;
         for val in freq {
@@ -394,7 +456,7 @@ impl PartialEq for Context {
 }
 
 /// The cost of merging two [`Context`]s together, as a float.
-#[derive(Deref, Copy, Debug, Clone, Default)]
+#[derive(Copy, Debug, Clone, Default)]
 #[repr(transparent)]
 pub struct ContextMergeCost(f32);
 
@@ -410,7 +472,7 @@ impl ContextMergeCost {
     /// use idencomp::context::ContextMergeCost;
     ///
     /// let cost = ContextMergeCost::new(0.5);
-    /// assert_eq!(*cost, 0.5);
+    /// assert_eq!(cost.get(), 0.5);
     /// ```
     ///
     /// # Panics
@@ -420,6 +482,21 @@ impl ContextMergeCost {
         assert!(value.is_finite());
 
         Self(value)
+    }
+
+    /// Gets the value for this `ContextMergeCost`.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::ContextMergeCost;
+    ///
+    /// let cost = ContextMergeCost::new(0.5);
+    /// assert_eq!(cost.get(), 0.5);
+    /// ```
+    #[inline]
+    #[must_use]
+    pub fn get(&self) -> f32 {
+        self.0
     }
 }
 
@@ -437,7 +514,7 @@ impl From<f32> for ContextMergeCost {
 
 impl PartialEq for ContextMergeCost {
     fn eq(&self, other: &Self) -> bool {
-        (**self - **other).abs() <= *ContextMergeCost::EQ_THRESHOLD
+        (self.get() - other.get()).abs() <= ContextMergeCost::EQ_THRESHOLD.get()
     }
 }
 

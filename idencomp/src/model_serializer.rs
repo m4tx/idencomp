@@ -72,22 +72,84 @@ pub struct SerializableModel {
 }
 
 impl SerializableModel {
+    /// Reads a [`Model`] instance using given [`Read`] object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::{Model, ModelType};
+    /// use idencomp::model_serializer::SerializableModel;
+    ///
+    /// let model = Model::empty(ModelType::Acids);
+    /// let mut buf = Vec::new();
+    /// SerializableModel::write_model(&model, &mut buf)?;
+    /// let loaded_model = SerializableModel::read_model(buf.as_slice())?;
+    /// assert_eq!(model, loaded_model);
+    ///
+    /// # Ok::<(), anyhow::Error>(())
+    /// ```
     pub fn read_model<R: Read>(reader: R) -> anyhow::Result<Model> {
         let result = Self::read(reader)?;
         Ok(result.into())
     }
 
-    pub fn read<R: Read>(reader: R) -> anyhow::Result<SerializableModel> {
+    /// Reads a [`SerializableModel`] instance using given [`Read`] object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::{Model, ModelType};
+    /// use idencomp::model_serializer::SerializableModel;
+    ///
+    /// let model = Model::empty(ModelType::Acids);
+    /// let serializable_model = SerializableModel::from(&model);
+    /// let mut buf = Vec::new();
+    /// serializable_model.write(&mut buf)?;
+    /// let loaded_model = SerializableModel::read(buf.as_slice())?;
+    /// assert_eq!(model, Model::from(loaded_model));
+    ///
+    /// # Ok::<(), anyhow::Error>(())
+    /// ```
+    pub fn read<R: Read>(reader: R) -> anyhow::Result<Self> {
         let result = rmp_serde::from_read(reader)?;
         Ok(result)
     }
 
+    /// Writes a [`Model`] instance using given [`Write`] object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::{Model, ModelType};
+    /// use idencomp::model_serializer::SerializableModel;
+    ///
+    /// let model = Model::empty(ModelType::Acids);
+    /// let mut buf = Vec::new();
+    /// SerializableModel::write_model(&model, &mut buf)?;
+    /// let loaded_model = SerializableModel::read_model(buf.as_slice())?;
+    /// assert_eq!(model, loaded_model);
+    ///
+    /// # Ok::<(), anyhow::Error>(())
+    /// ```
     pub fn write_model<W: Write>(model: &Model, mut writer: W) -> anyhow::Result<()> {
-        SerializableModel::from(model).write(&mut writer)?;
+        Self::from(model).write(&mut writer)?;
         writer.flush()?;
         Ok(())
     }
 
+    /// Writes a [`SerializableModel`] instance using given [`Write`] object.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::model::{Model, ModelType};
+    /// use idencomp::model_serializer::SerializableModel;
+    ///
+    /// let model = Model::empty(ModelType::Acids);
+    /// let serializable_model = SerializableModel::from(&model);
+    /// let mut buf = Vec::new();
+    /// serializable_model.write(&mut buf)?;
+    /// let loaded_model = SerializableModel::read(buf.as_slice())?;
+    /// assert_eq!(model, Model::from(loaded_model));
+    ///
+    /// # Ok::<(), anyhow::Error>(())
+    /// ```
     pub fn write<W: Write>(&self, mut writer: W) -> anyhow::Result<()> {
         self.serialize(&mut rmp_serde::Serializer::new(&mut writer))?;
         writer.flush()?;

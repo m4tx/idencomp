@@ -194,6 +194,24 @@ impl Model {
         }
     }
 
+    /// Returns the compression rate of the model.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::{ContextSpec, ContextSpecType};
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let context = Context::new_from(1.0, [0.0, 0.5, 0.5, 0.0, 0.0]);
+    /// let complex_ctx = ComplexContext::with_single_spec(ContextSpec::new(0), context);
+    /// let _model =
+    ///     Model::with_model_and_spec_type(ModelType::Acids, ContextSpecType::Dummy, [complex_ctx]);
+    /// ```
+    ///
+    /// # Panics
+    /// Panics if the number of symbols in any context is not equal to
+    /// `model_type.symbols_num()`.
     #[must_use]
     pub fn with_model_and_spec_type<T: Into<Vec<ComplexContext>>>(
         model_type: ModelType,
@@ -332,18 +350,70 @@ impl Model {
         self.spec_type
     }
 
+    /// Returns the slice of contexts for this model.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::{ContextSpec, ContextSpecType};
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let context = Context::new_from(1.0, [0.0, 0.5, 0.5, 0.0, 0.0]);
+    /// let complex_ctx = ComplexContext::with_single_spec(ContextSpec::new(0), context.clone());
+    /// let model =
+    ///     Model::with_model_and_spec_type(ModelType::Acids, ContextSpecType::Dummy, [complex_ctx]);
+    /// assert_eq!(model.contexts(), &[context]);
+    /// ```
     #[inline]
     #[must_use]
     pub fn contexts(&self) -> &[Context] {
         &self.contexts
     }
 
+    /// Returns the map of context specs to context indices (as returned by
+    /// [`Self::contexts()`].
+    ///
+    /// # Examples
+    /// ```
+    /// use std::collections::HashMap;
+    ///
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::{ContextSpec, ContextSpecType};
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let context = Context::new_from(1.0, [0.0, 0.5, 0.5, 0.0, 0.0]);
+    /// let complex_ctx = ComplexContext::with_single_spec(ContextSpec::new(0), context);
+    /// let model =
+    ///     Model::with_model_and_spec_type(ModelType::Acids, ContextSpecType::Dummy, [complex_ctx]);
+    /// let expected = HashMap::from([(ContextSpec::new(0), 0)]);
+    /// assert_eq!(model.map(), &expected);
+    /// ```
     #[inline]
     #[must_use]
     pub fn map(&self) -> &HashMap<ContextSpec, usize> {
         &self.map
     }
 
+    /// Returns this model as a vector of [`ComplexContext`]s.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::{ContextSpec, ContextSpecType};
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let context = Context::new_from(1.0, [0.0, 0.5, 0.5, 0.0, 0.0]);
+    /// let complex_ctx = ComplexContext::with_single_spec(ContextSpec::new(0), context);
+    /// let model = Model::with_model_and_spec_type(
+    ///     ModelType::Acids,
+    ///     ContextSpecType::Dummy,
+    ///     [complex_ctx.clone()],
+    /// );
+    /// assert_eq!(model.as_complex_contexts(), [complex_ctx]);
+    /// ```
     #[must_use]
     pub fn as_complex_contexts(&self) -> Vec<ComplexContext> {
         let mut specs = Vec::new();
@@ -360,6 +430,21 @@ impl Model {
             .collect()
     }
 
+    /// Returns the compression rate of the model.
+    ///
+    /// # Examples
+    /// ```
+    /// use idencomp::context::Context;
+    /// use idencomp::context_binning::ComplexContext;
+    /// use idencomp::context_spec::{ContextSpec, ContextSpecType};
+    /// use idencomp::model::{Model, ModelType};
+    ///
+    /// let context = Context::new_from(1.0, [0.0, 0.5, 0.5, 0.0, 0.0]);
+    /// let complex_ctx = ComplexContext::with_single_spec(ContextSpec::new(0), context);
+    /// let model =
+    ///     Model::with_model_and_spec_type(ModelType::Acids, ContextSpecType::Dummy, [complex_ctx]);
+    /// assert_eq!(model.rate().get(), 1.0);
+    /// ```
     #[must_use]
     pub fn rate(&self) -> CompressionRate {
         CompressionRate::new(

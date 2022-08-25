@@ -22,8 +22,7 @@ use crate::sequence_compressor::{
 /// `ModelProvider` makes it possible to get model by its identifier. It can
 /// also make a new instance by filtering the models inside by a list of
 /// identifiers. It also can internally convert [`Model`]s to
-/// [`RansEncModel`](crate::sequence_compressor::RansEncModel)s
-/// and [`RansDecModel`](crate::sequence_compressor::RansDecModel)s.
+/// [`CompressorModel`]s and [`DecompressorModel`]s.
 #[derive(Debug, Clone)]
 pub struct ModelProvider {
     models: Vec<Model>,
@@ -139,9 +138,8 @@ impl ModelProvider {
         self.index_map[identifier]
     }
 
-    /// Converts [`Model`]s inside this `ModelProvider` to
-    /// [`RansEncModel`](crate::sequence_compressor::RansEncModel)s so they can
-    /// be obtained with [`Self::acid_enc_models()`] and
+    /// Converts [`Model`]s inside this `ModelProvider` to [`CompressorModel`]s
+    /// so they can be obtained with [`Self::acid_enc_models()`] and
     /// [`Self::q_score_enc_models()`].
     ///
     /// # Examples
@@ -158,8 +156,8 @@ impl ModelProvider {
     }
 
     /// Converts [`Model`]s inside this `ModelProvider` to
-    /// [`RansDecModel`](crate::sequence_compressor::RansDecModel)s so they can
-    /// be obtained with [`Self::decompressor_models()`].
+    /// [`DecompressorModel`]s so they can be obtained with
+    /// [`Self::decompressor_models()`].
     ///
     /// # Examples
     /// ```
