@@ -10,8 +10,8 @@
 | SRR19549058__b_stabilis__illumina_hiseq_2500__q_scores.msgpack | generic_ao0_qo2_pb6    |         23221 |            363 | 1.0534605  | 1.1090238   | 1.535664   |
 | m64187e__sars_cov_2__sequel_ii_e__acids.msgpack                | generic_ao8_qo0_pb0    |         87093 |          53266 | 1.3062766  | 1.4495015   | 1.9995453  |
 | m64187e__sars_cov_2__sequel_ii_e__q_scores.msgpack             | light_ao0_qo4_pb0_qm16 |         65536 |            407 | 1.0913382  | 1.119422    | 1.4806273  |
-| SRR5373739__cat__illumina_hiseq_2500__acids.msgpack            | generic_ao4_qo1_pb2    |         11213 |           5486 | 1.9178923  | 1.9270881   | 1.9802411  |
-| SRR5373739__cat__illumina_hiseq_2500__q_scores.msgpack         | light_ao0_qo4_pb3_qm16 |         14810 |           2046 | 0.7870272  | 0.799412    | 0.9821181  |
+| SRR5373739__cat__illumina_hiseq_2500__acids.msgpack            | generic_ao4_qo1_pb2    |         11213 |              8 | 1.9178923  | 1.9503715   | 1.9802411  |
+| SRR5373739__cat__illumina_hiseq_2500__q_scores.msgpack         | light_ao0_qo4_pb3_qm16 |         14810 |              6 | 0.7870272  | 0.83380574  | 0.9821181  |
 | SRR18908372__cat__illumina_novaseq_6000__acids.msgpack         | light_ao4_qo3_pb2_qm8  |         27648 |          13133 | 1.9188511  | 1.928996    | 1.9859153  |
 | SRR18908372__cat__illumina_novaseq_6000__q_scores.msgpack      | light_ao0_qo4_pb3_qm16 |          1725 |            103 | 0.4196878  | 0.42710626  | 0.4811454  |
 | SRR20210997__salmonella__illumina_hiseq_2500__acids.msgpack    | light_ao8_qo0_pb0_qm1  |         65536 |          31130 | 1.9040625  | 1.9258752   | 2.001345   |

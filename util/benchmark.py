@@ -168,10 +168,10 @@ compressors = [
                 output_option='-o'),
     ),
     Compressor(
-        'idencomp_q1',
+        'idencomp_fast',
         Command(['idencomp', 'compress',
                  '--no-progress', '-q', '--threads', '16', '--no-identifiers',
-                 '--quality', '1'],
+                 '--fast'],
                 output_option='-o'),
         Command(['idencomp', 'decompress',
                  '--no-progress', '-q', '--threads', '16'],
