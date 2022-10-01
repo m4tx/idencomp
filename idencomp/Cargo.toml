@@ -33,7 +33,7 @@ crc32fast = "1.3.2"
 derive_more = "0.99.17"
 flate2 = "1.0.24"
 idencomp-macros = { path = "../idencomp-macros" }
-itertools = "0.10.3"
+itertools = "0.10.5"
 lazy_static = "1.4.0"
 log = "0.4.17"
 number_prefix = "0.4.0"
