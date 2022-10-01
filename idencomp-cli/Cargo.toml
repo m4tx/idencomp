@@ -20,7 +20,7 @@ path = "src/main.rs"
 anyhow = "1.0.62"
 atty = "0.2.14"
 chrono = "0.4.22"
-clap = { version = "3.2.17", features = ["derive"] }
+clap = { version = "4.0.7", features = ["derive"] }
 clap-verbosity-flag = "1.0.1"
 derive_more = "0.99.17"
 human-panic = "1.0.3"
